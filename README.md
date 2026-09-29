@@ -39,18 +39,36 @@ npx shadcn@latest add https://shadcn-visited-map.vercel.app/r/visited-map.json
 ## Usage
 
 ```tsx
-import { VisitedMap, type VisitedMapPlace } from "@/components/visited-map";
+import { VisitedMap, type VisitedMapPlace } from "@/components/visited-map"
 
 // coords are [lng, lat] — not [lat, lng]
 const places: VisitedMapPlace[] = [
-  { name: "Buenos Aires", coords: [-58.38, -34.6], variant: "current" },
-  { name: "Barcelona", coords: [2.17, 41.39], variant: "lived" },
-  { name: "Tokyo", coords: [139.69, 35.69] },
-  { name: "Sydney", coords: [151.21, -33.87], variant: "wishlist" },
-];
+  {
+    name: "Buenos Aires",
+    coords: [-58.38, -34.6],
+    country: "AR",
+    variant: "current",
+  },
+  { name: "Barcelona", coords: [2.17, 41.39], country: "ES", variant: "lived" },
+  { name: "Tokyo", coords: [139.69, 35.69], country: "JP" },
+  // wishlist countries are not highlighted
+  {
+    name: "Sydney",
+    coords: [151.21, -33.87],
+    country: "AU",
+    variant: "wishlist",
+  },
+]
 
 export default function Page() {
-  return <VisitedMap places={places} className="max-w-3xl" />;
+  return (
+    <VisitedMap
+      places={places}
+      // extra countries you've been to without pinning a city
+      countries={["UY"]}
+      className="max-w-3xl"
+    />
+  )
 }
 ```
 
@@ -59,18 +77,20 @@ export default function Page() {
 
 ## Props
 
-| Prop        | Type                | Description                           |
-| ----------- | ------------------- | ------------------------------------- |
-| `places`    | `VisitedMapPlace[]` | Cities to plot on the map.            |
-| `className` | `string`            | Extra classes for the card container. |
+| Prop        | Type                      | Description                                                                                                 |
+| ----------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `places`    | `VisitedMapPlace[]`       | Cities to plot on the map.                                                                                  |
+| `countries` | `VisitedMapCountryCode[]` | Extra countries to highlight (ISO 3166-1 alpha-2, e.g. `"UY"`), on top of the ones from `places`. Optional. |
+| `className` | `string`                  | Extra classes for the card container.                                                                       |
 
 ### `VisitedMapPlace`
 
-| Field     | Type                                              | Description                         |
-| --------- | ------------------------------------------------- | ----------------------------------- |
-| `name`    | `string`                                          | Shown in the tooltip.               |
-| `coords`  | `[lng, lat]`                                      | Longitude first, then latitude.     |
-| `variant` | `"visited" \| "lived" \| "wishlist" \| "current"` | Dot style. Defaults to `"visited"`. |
+| Field     | Type                                              | Description                                                                                                  |
+| --------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `name`    | `string`                                          | Shown in the tooltip.                                                                                        |
+| `coords`  | `[lng, lat]`                                      | Longitude first, then latitude.                                                                              |
+| `country` | `VisitedMapCountryCode`                           | ISO 3166-1 alpha-2 code (e.g. `"AR"`). Highlights the country unless the place is on the wishlist. Optional. |
+| `variant` | `"visited" \| "lived" \| "wishlist" \| "current"` | Dot style. Defaults to `"visited"`.                                                                          |
 
 ### Variants
 
@@ -80,6 +100,8 @@ export default function Page() {
 | `lived`    | Emerald dot                                |
 | `wishlist` | Hollow amber dot                           |
 | `current`  | Rose dot with a pulsing halo, drawn on top |
+
+Countries of `visited`, `lived` and `current` places (plus any in `countries`) get a light sky tint; wishlist countries stay plain. The map is drawn at 1:110m, so very small countries (Singapore, Monaco, Malta…) aren't available; TypeScript only accepts codes that exist on the map. Kosovo uses `"XK"`.
 
 To change the colors, edit `variantStyles` in `components/visited-map.tsx` after installing. The component is yours to modify.
 

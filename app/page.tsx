@@ -11,13 +11,19 @@ const usageImport = `import { VisitedMap, type VisitedMapPlace } from "@/compone
 
 const usageExample = `// coords are [lng, lat] — not [lat, lng]
 const places: VisitedMapPlace[] = [
-  { name: "Buenos Aires", coords: [-58.38, -34.6], variant: "current" },
-  { name: "Barcelona", coords: [2.17, 41.39], variant: "lived" },
-  { name: "Tokyo", coords: [139.69, 35.69] },
-  { name: "Sydney", coords: [151.21, -33.87], variant: "wishlist" },
+  { name: "Buenos Aires", coords: [-58.38, -34.6], country: "AR", variant: "current" },
+  { name: "Barcelona", coords: [2.17, 41.39], country: "ES", variant: "lived" },
+  { name: "Tokyo", coords: [139.69, 35.69], country: "JP" },
+  // wishlist countries are not highlighted
+  { name: "Sydney", coords: [151.21, -33.87], country: "AU", variant: "wishlist" },
 ]
 
-<VisitedMap places={places} className="max-w-3xl" />`
+<VisitedMap
+  places={places}
+  // extra countries you've been to without pinning a city
+  countries={["UY"]}
+  className="max-w-3xl"
+/>`
 
 const legend: { variant: VisitedMapVariant; label: string; dot: string }[] = [
   { variant: "visited", label: "Visited", dot: "bg-sky-500 dark:bg-sky-400" },
@@ -42,6 +48,13 @@ const props = [
     description: "Cities to plot on the map.",
   },
   {
+    name: "countries",
+    type: "VisitedMapCountryCode[]",
+    default: "—",
+    description:
+      'Extra countries to highlight (ISO 3166-1 alpha-2, e.g. "UY"), on top of the ones from places. Very small countries aren\'t drawn at this resolution.',
+  },
+  {
     name: "className",
     type: "string",
     default: "—",
@@ -59,6 +72,12 @@ const placeFields = [
     name: "coords",
     type: "[lng, lat]",
     description: "Longitude first, then latitude (GeoJSON order).",
+  },
+  {
+    name: "country",
+    type: "VisitedMapCountryCode",
+    description:
+      'ISO 3166-1 alpha-2 code (e.g. "AR"). Highlights the country unless the place is on the wishlist.',
   },
   {
     name: "variant",
