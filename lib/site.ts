@@ -1,24 +1,15 @@
-const rawRegistryUrl =
-  process.env.NEXT_PUBLIC_REGISTRY_URL ??
-  "https://shadcn-visited-map.vercel.app"
-
-// Accept "example.com" as well as "https://example.com/": the shadcn CLI only
-// treats the argument as a remote registry item when it has a protocol.
-export const registryUrl = (
-  /^https?:\/\//.test(rawRegistryUrl)
-    ? rawRegistryUrl
-    : `https://${rawRegistryUrl}`
-).replace(/\/+$/, "")
-
-const itemUrl = `${registryUrl}/r/visited-map.json`
+// GitHub address (owner/repo/item): the shadcn CLI reads registry.json from the
+// repo. Switch to "@visited-map/visited-map" once the namespace is listed in the
+// shadcn registry directory.
+export const installTarget = "crashncrow/shadcn-visited-map/visited-map"
 
 export const packageManagers = ["pnpm", "npm", "yarn", "bun"] as const
 
 export type PackageManager = (typeof packageManagers)[number]
 
 export const installCommands: Record<PackageManager, string> = {
-  pnpm: `pnpm dlx shadcn@latest add ${itemUrl}`,
-  npm: `npx shadcn@latest add ${itemUrl}`,
-  yarn: `yarn shadcn@latest add ${itemUrl}`,
-  bun: `bunx --bun shadcn@latest add ${itemUrl}`,
+  pnpm: `pnpm dlx shadcn@latest add ${installTarget}`,
+  npm: `npx shadcn@latest add ${installTarget}`,
+  yarn: `yarn shadcn@latest add ${installTarget}`,
+  bun: `bunx --bun shadcn@latest add ${installTarget}`,
 }

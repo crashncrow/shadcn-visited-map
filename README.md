@@ -14,7 +14,7 @@ An SVG world map for [shadcn/ui](https://ui.shadcn.com) that plots the cities yo
 ## Installation
 
 ```bash
-npx shadcn@latest add https://shadcn-visited-map.vercel.app/r/visited-map.json
+npx shadcn@latest add crashncrow/shadcn-visited-map/visited-map
 ```
 
 This adds `components/visited-map.tsx` and installs `d3-geo`, `topojson-client` and `world-atlas`. Your project needs shadcn/ui with Tailwind CSS v4 set up (`npx shadcn@latest init`).
@@ -23,12 +23,18 @@ This adds `components/visited-map.tsx` and installs `d3-geo`, `topojson-client` 
 <summary>pnpm, yarn, bun</summary>
 
 ```bash
-pnpm dlx shadcn@latest add https://shadcn-visited-map.vercel.app/r/visited-map.json
-yarn shadcn@latest add https://shadcn-visited-map.vercel.app/r/visited-map.json
-bunx --bun shadcn@latest add https://shadcn-visited-map.vercel.app/r/visited-map.json
+pnpm dlx shadcn@latest add crashncrow/shadcn-visited-map/visited-map
+yarn shadcn@latest add crashncrow/shadcn-visited-map/visited-map
+bunx --bun shadcn@latest add crashncrow/shadcn-visited-map/visited-map
 ```
 
 </details>
+
+You can also install from the registry URL:
+
+```bash
+npx shadcn@latest add https://shadcn-visited-map.vercel.app/r/visited-map.json
+```
 
 ## Usage
 
@@ -96,7 +102,7 @@ npm run registry:build  # regenerates public/r/*.json from registry.json
 
 After changing the component, run `npm run registry:build` and commit the updated `public/r/` so the deployed registry serves the new version.
 
-The install URL shown on the docs site comes from `NEXT_PUBLIC_REGISTRY_URL` and defaults to `https://shadcn-visited-map.vercel.app`. Set it if you deploy a fork.
+The short install address (`crashncrow/shadcn-visited-map/visited-map`) reads the registry from this GitHub repo, so changes reach users once they are pushed. It is defined in `lib/site.ts`.
 
 ## License
 
