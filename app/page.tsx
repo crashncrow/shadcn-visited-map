@@ -1,8 +1,10 @@
 import { CodeBlock } from "@/components/code-block"
 import { InstallTabs } from "@/components/install-tabs"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { VisitedStatsCard } from "@/components/visited-stats-card"
 import { demoPlaces } from "@/lib/demo-places"
 import {
+  getVisitedStats,
   VisitedMap,
   type VisitedMapVariant,
 } from "@/registry/visited-map/visited-map"
@@ -24,6 +26,13 @@ const places: VisitedMapPlace[] = [
   countries={["UY"]}
   className="max-w-3xl"
 />`
+
+const usageStats = `import { getVisitedStats } from "@/components/visited-map"
+
+const { visited, total, percent } = getVisitedStats(places, ["UY"])
+// → { visited: 4, total: 195, percent: 2.1 }`
+
+const stats = getVisitedStats(demoPlaces)
 
 const legend: { variant: VisitedMapVariant; label: string; dot: string }[] = [
   { variant: "visited", label: "Visited", dot: "bg-sky-500 dark:bg-sky-400" },
@@ -151,7 +160,14 @@ export default function Home() {
       </header>
 
       <div className="flex flex-col gap-3">
-        <VisitedMap places={demoPlaces} />
+        {/* Stacked above the map on small screens, floating over the ocean on large ones. */}
+        <div className="flex flex-col gap-3 lg:relative">
+          <VisitedStatsCard
+            stats={stats}
+            className="lg:absolute lg:bottom-4 lg:left-4 lg:z-10 lg:w-52 lg:p-3.5"
+          />
+          <VisitedMap places={demoPlaces} />
+        </div>
         <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
           {legend.map((item) => (
             <li key={item.variant} className="flex items-center gap-2">
@@ -169,6 +185,18 @@ export default function Home() {
       <Section title="Usage">
         <CodeBlock code={usageImport} />
         <CodeBlock code={usageExample} />
+      </Section>
+
+      <Section title="Stats">
+        <p className="text-sm text-muted-foreground">
+          <code className="font-mono text-foreground">getVisitedStats</code>{" "}
+          counts the same countries the map highlights (wishlist excluded) out
+          of 195: the UN member states plus the Vatican and Palestine. Small
+          countries that aren&apos;t drawn, like Singapore, still count.
+          Territories such as Greenland or Puerto Rico are highlighted but not
+          counted.
+        </p>
+        <CodeBlock code={usageStats} />
       </Section>
 
       <Section title="Props">

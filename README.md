@@ -75,6 +75,19 @@ export default function Page() {
 > [!IMPORTANT]
 > Coordinates go in **`[longitude, latitude]`** order (the GeoJSON convention). Google Maps copies them as `lat, lng`, so swap the two numbers.
 
+## Stats
+
+`getVisitedStats` returns the share of the world's countries you've visited, counting the same countries the map highlights (wishlist excluded):
+
+```tsx
+import { getVisitedStats } from "@/components/visited-map"
+
+const { visited, total, percent } = getVisitedStats(places, ["UY"])
+// → { visited: 4, total: 195, percent: 2.1 }
+```
+
+The total is 195: the 193 UN member states plus the Vatican and Palestine. Small countries that aren't drawn on the map, like Singapore, still count. Territories such as Greenland or Puerto Rico, Kosovo and Taiwan can be highlighted but aren't counted.
+
 ## Props
 
 | Prop        | Type                      | Description                                                                                                 |
@@ -101,7 +114,7 @@ export default function Page() {
 | `wishlist` | Hollow amber dot                           |
 | `current`  | Rose dot with a pulsing halo, drawn on top |
 
-Countries of `visited`, `lived` and `current` places (plus any in `countries`) get a light sky tint; wishlist countries stay plain. The map is drawn at 1:110m, so very small countries (Singapore, Monaco, Malta…) aren't available; TypeScript only accepts codes that exist on the map. Kosovo uses `"XK"`.
+Countries of `visited`, `lived` and `current` places (plus any in `countries`) get a light sky tint; wishlist countries stay plain. The map is drawn at 1:110m, so very small countries (Singapore, Monaco, Malta…) can't be highlighted, although they still count in the stats below. Kosovo uses `"XK"`.
 
 To change the colors, edit `variantStyles` in `components/visited-map.tsx` after installing. The component is yours to modify.
 

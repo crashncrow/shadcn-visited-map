@@ -31,9 +31,9 @@ export type VisitedMapProps = {
   places: VisitedMapPlace[]
   /**
    * Extra countries to highlight, as ISO 3166-1 alpha-2 codes (e.g. `["UY"]`),
-   * on top of the ones taken from `places`. Only countries drawn at this map's
-   * resolution are available, so very small ones (Singapore, Monaco, Malta…)
-   * can't be highlighted.
+   * on top of the ones taken from `places`. Very small countries (Singapore,
+   * Monaco, Malta…) aren't drawn at this map's resolution, but they still
+   * count in `getVisitedStats`.
    */
   countries?: VisitedMapCountryCode[]
   className?: string
@@ -74,7 +74,36 @@ const countryIds = {
   VU: "548", YE: "887", ZA: "710", ZM: "894", ZW: "716",
 } as const
 
-export type VisitedMapCountryCode = keyof typeof countryIds | "XK"
+// The 193 UN member states plus the two observer states (Vatican, Palestine):
+// the "195 countries" used for travel stats. Some are too small to be drawn
+// on this map but still count.
+// prettier-ignore
+const sovereignCodes = [
+  "AD", "AE", "AF", "AG", "AL", "AM", "AO", "AR", "AT", "AU", "AZ", "BA", "BB",
+  "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BN", "BO", "BR", "BS", "BT", "BW",
+  "BY", "BZ", "CA", "CD", "CF", "CG", "CH", "CI", "CL", "CM", "CN", "CO", "CR",
+  "CU", "CV", "CY", "CZ", "DE", "DJ", "DK", "DM", "DO", "DZ", "EC", "EE", "EG",
+  "ER", "ES", "ET", "FI", "FJ", "FM", "FR", "GA", "GB", "GD", "GE", "GH", "GM",
+  "GN", "GQ", "GR", "GT", "GW", "GY", "HN", "HR", "HT", "HU", "ID", "IE", "IL",
+  "IN", "IQ", "IR", "IS", "IT", "JM", "JO", "JP", "KE", "KG", "KH", "KI", "KM",
+  "KN", "KP", "KR", "KW", "KZ", "LA", "LB", "LC", "LI", "LK", "LR", "LS", "LT",
+  "LU", "LV", "LY", "MA", "MC", "MD", "ME", "MG", "MH", "MK", "ML", "MM", "MN",
+  "MR", "MT", "MU", "MV", "MW", "MX", "MY", "MZ", "NA", "NE", "NG", "NI", "NL",
+  "NO", "NP", "NR", "NZ", "OM", "PA", "PE", "PG", "PH", "PK", "PL", "PS", "PT",
+  "PW", "PY", "QA", "RO", "RS", "RU", "RW", "SA", "SB", "SC", "SD", "SE", "SG",
+  "SI", "SK", "SL", "SM", "SN", "SO", "SR", "SS", "ST", "SV", "SY", "SZ", "TD",
+  "TG", "TH", "TJ", "TL", "TM", "TN", "TO", "TR", "TT", "TV", "TZ", "UA", "UG",
+  "US", "UY", "UZ", "VA", "VC", "VE", "VN", "VU", "WS", "YE", "ZA", "ZM", "ZW",
+] as const
+
+/**
+ * ISO 3166-1 alpha-2 code of a country that can be highlighted on the map or
+ * counted in `getVisitedStats` (or both).
+ */
+export type VisitedMapCountryCode =
+  keyof typeof countryIds | (typeof sovereignCodes)[number] | "XK"
+
+const sovereign = new Set<string>(sovereignCodes)
 
 const codeById = new Map<string, string>(
   Object.entries(countryIds).map(([code, id]) => [id, code]),
@@ -163,6 +192,36 @@ function getHighlightedCountries(
   return new Set(
     [...fromPlaces, ...countries].map((code) => code.toUpperCase()),
   )
+}
+
+export type VisitedMapStats = {
+  /** Countries visited, counted once each (wishlist places excluded). */
+  visited: number
+  /** Always 195: UN member states plus the two observer states. */
+  total: number
+  /** `visited / total` as a percentage, rounded to one decimal. */
+  percent: number
+}
+
+/**
+ * Share of the world's 195 countries you've visited, from the same data the
+ * map highlights. Territories (Greenland, Puerto Rico…), Kosovo and Taiwan
+ * can be highlighted but aren't counted.
+ */
+export function getVisitedStats(
+  places: VisitedMapPlace[],
+  countries?: VisitedMapCountryCode[],
+): VisitedMapStats {
+  const total = sovereign.size
+  const visited = Array.from(getHighlightedCountries(places, countries)).filter(
+    (code) => sovereign.has(code),
+  ).length
+
+  return {
+    visited,
+    total,
+    percent: Math.round((visited / total) * 1000) / 10,
+  }
 }
 
 export function VisitedMap({ places, countries, className }: VisitedMapProps) {
