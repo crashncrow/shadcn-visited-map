@@ -1,5 +1,14 @@
-export const registryUrl =
-  process.env.NEXT_PUBLIC_REGISTRY_URL ?? "http://localhost:3000"
+const rawRegistryUrl =
+  process.env.NEXT_PUBLIC_REGISTRY_URL ??
+  "https://shadcn-visited-map.vercel.app"
+
+// Accept "example.com" as well as "https://example.com/": the shadcn CLI only
+// treats the argument as a remote registry item when it has a protocol.
+export const registryUrl = (
+  /^https?:\/\//.test(rawRegistryUrl)
+    ? rawRegistryUrl
+    : `https://${rawRegistryUrl}`
+).replace(/\/+$/, "")
 
 const itemUrl = `${registryUrl}/r/visited-map.json`
 
