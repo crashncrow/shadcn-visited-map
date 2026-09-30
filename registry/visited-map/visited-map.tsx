@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 export type VisitedMapVariant = "visited" | "lived" | "wishlist" | "current"
 
 // ISO 3166-1 alpha-2 code → [world-atlas id (null when too small to be drawn),
-// name, center lng, center lat]. Covers the 195 countries plus 51 territories.
+// name, center lng, center lat]. Covers the 195 countries plus 50 territories.
 // Names and centers from Natural Earth (public domain); the centers are label
 // points, which sit on the main landmass (unlike centroids).
 // prettier-ignore
@@ -85,7 +85,6 @@ const countryData = {
   ET: ["231", "Ethiopia", 39.09, 8.03],
   FI: ["246", "Finland", 27.28, 63.25],
   FJ: ["242", "Fiji", 177.98, -17.83],
-  FK: ["238", "Falkland Islands", -58.74, -51.61],
   FM: [null, "Micronesia", 158.23, 6.89],
   FO: [null, "Faroe Islands", -7.06, 62.19],
   FR: ["250", "France", 2.55, 46.7],
@@ -268,7 +267,7 @@ const countryData = {
 >
 
 /**
- * ISO 3166-1 alpha-2 code of one of the 195 countries or 51 territories (e.g.
+ * ISO 3166-1 alpha-2 code of one of the 195 countries or 50 territories (e.g.
  * `"AR"`, `"CW"`; `"XK"` for Kosovo). Every code gets a pin at its center, but
  * only the ones drawn at this map's 1:110m resolution can be highlighted:
  * small countries and islands (Singapore, Malta, Curaçao…) show just the pin.
@@ -280,7 +279,7 @@ export type VisitedMapCountryCode = keyof typeof countryData
 // Vatican and Palestine), though the ones drawn on the map can be highlighted.
 // prettier-ignore
 const uncounted = new Set<string>([
-  "AI", "AS", "AW", "AX", "BL", "BM", "BQ", "CC", "CK", "CW", "CX", "EH", "FK",
+  "AI", "AS", "AW", "AX", "BL", "BM", "BQ", "CC", "CK", "CW", "CX", "EH",
   "FO", "GF", "GG", "GI", "GL", "GP", "GS", "GU", "HK", "IM", "IO", "JE", "KY",
   "MF", "MO", "MP", "MQ", "MS", "NC", "NF", "NU", "PF", "PM", "PN", "PR", "RE",
   "SH", "SJ", "SX", "TC", "TF", "TK", "TW", "VG", "VI", "WF", "XK", "YT",
@@ -336,11 +335,13 @@ const rank: Record<VisitedMapVariant, number> = {
   current: 3,
 }
 
-const codeById = new Map<string, string>(
-  Object.entries(countryData).flatMap(([code, [id]]) =>
-    id ? [[id, code]] : [],
+const codeById = new Map<string, string>([
+  ...Object.entries(countryData).flatMap(([code, [id]]) =>
+    id ? [[id, code] as const] : [],
   ),
-)
+  // The Malvinas Islands are shown as part of Argentina.
+  ["238", "AR"],
+])
 
 const topology = worldAtlas as unknown as Parameters<typeof feature>[0]
 const { features } = feature(

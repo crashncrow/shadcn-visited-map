@@ -286,10 +286,7 @@ export const territories = {
     { code: "TC", name: "Turks and Caicos Islands" },
     { code: "VI", name: "United States Virgin Islands" },
   ],
-  "South America": [
-    { code: "FK", name: "Falkland Islands" },
-    { code: "GF", name: "French Guiana" },
-  ],
+  "South America": [{ code: "GF", name: "French Guiana" }],
   Oceania: [
     { code: "AS", name: "American Samoa" },
     { code: "CX", name: "Christmas Island" },

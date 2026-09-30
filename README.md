@@ -69,7 +69,7 @@ Each country in `countries` is highlighted with its status color and gets a pin 
 > [!IMPORTANT]
 > Place coordinates go in **`[longitude, latitude]`** order (the GeoJSON convention). Google Maps copies them as `lat, lng`, so swap the two numbers.
 
-Rather click than type codes? On the [places page](https://shadcn-visited-map.vercel.app/places) you can mark any of the 195 countries (plus 51 territories such as Curaçao, Puerto Rico or Hong Kong), grouped by continent, add cities by hand (coordinates as copied from Google Maps), preview the map, and copy the generated code.
+Rather click than type codes? On the [places page](https://shadcn-visited-map.vercel.app/places) you can mark any of the 195 countries (plus 50 territories such as Curaçao, Puerto Rico or Hong Kong), grouped by continent, add cities by hand (coordinates as copied from Google Maps), preview the map, and copy the generated code.
 
 ## Stats
 
@@ -120,7 +120,7 @@ The total is 195: the 193 UN member states plus the Vatican and Palestine. Small
 | `wishlist` | Hollow amber dot                           | Light amber   |
 | `current`  | Rose dot with a pulsing halo, drawn on top | Light rose    |
 
-The map is drawn at 1:110m, so very small countries (Singapore, Monaco, Malta…) aren't highlighted, but they still get a pin and count in the stats. The 51 territories work too (e.g. `"CW"` for Curaçao, `"PR"`, `"HK"`): they get a pin and are highlighted when drawn, but never count in the stats. Kosovo uses `"XK"`.
+The map is drawn at 1:110m, so very small countries (Singapore, Monaco, Malta…) aren't highlighted, but they still get a pin and count in the stats. The 50 territories work too (e.g. `"CW"` for Curaçao, `"PR"`, `"HK"`): they get a pin and are highlighted when drawn, but never count in the stats. Kosovo uses `"XK"`.
 
 To change the colors, edit `pinStyles` and `countryStyles` in `components/visited-map.tsx` after installing. The component is yours to modify.
 
@@ -140,7 +140,7 @@ npm run registry:build  # regenerates public/r/*.json from registry.json
 | `registry.json`                        | Registry definition read by `shadcn build`.                               |
 | `public/r/`                            | Built registry JSON served to `shadcn add`. Commit it.                    |
 | `app/page.tsx`                         | Docs and demo page.                                                       |
-| `lib/regions.ts`                       | The 195 countries and 51 territories for the `/places` builder.           |
+| `lib/regions.ts`                       | The 195 countries and 50 territories for the `/places` builder.           |
 | `lib/country-centers.ts`               | Center points of each country and territory (Natural Earth label points). |
 
 After changing the component, run `npm run registry:build` and commit the updated `public/r/` so the deployed registry serves the new version.
