@@ -185,11 +185,12 @@ export default function Image() {
           </div>
           <div style={{ fontSize: 22, color: theme.muted }}>of the world</div>
         </div>
+        {/* Two fixed-width columns: all four don't fit on one line. */}
         <div
           style={{
             display: "flex",
             flexWrap: "wrap",
-            columnGap: 22,
+            width: 300,
             rowGap: 10,
             fontSize: 21,
             color: theme.muted,
@@ -198,7 +199,12 @@ export default function Image() {
           {legend.map(({ variant, label }) => (
             <div
               key={variant}
-              style={{ display: "flex", alignItems: "center", gap: 8 }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                width: 150,
+              }}
             >
               <div
                 style={{
