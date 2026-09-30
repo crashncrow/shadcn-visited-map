@@ -28,6 +28,13 @@ const props: PropRow[] = [
     description: "Show a pin at the center of each country in countries.",
   },
   {
+    name: "showStats",
+    type: "boolean",
+    default: "false",
+    description:
+      "Show how much of the world you've seen in the bottom-left corner: a card on wide maps, a pill that expands on tap on narrow ones.",
+  },
+  {
     name: "className",
     type: "string",
     description: "Extra classes for the card container.",

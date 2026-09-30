@@ -10,7 +10,7 @@ export const repoUrl = "https://github.com/crashncrow/shadcn-visited-map"
 export const mainNav: NavItem[] = [
   { title: "Docs", href: "/docs" },
   { title: "Examples", href: "/docs/examples" },
-  { title: "Builder", href: "/places" },
+  { title: "Builder", href: "/builder" },
 ]
 
 /** Left sidebar of the docs, also used by the search and mobile menu. */
@@ -31,7 +31,7 @@ export const docsNav: NavGroup[] = [
   },
   {
     title: "Tools",
-    items: [{ title: "Places Builder", href: "/places" }],
+    items: [{ title: "Places Builder", href: "/builder" }],
   },
 ]
 

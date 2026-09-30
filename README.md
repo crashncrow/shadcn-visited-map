@@ -69,11 +69,11 @@ Each country in `countries` is highlighted with its status color and gets a pin 
 > [!IMPORTANT]
 > Place coordinates go in **`[longitude, latitude]`** order (the GeoJSON convention). Google Maps copies them as `lat, lng`, so swap the two numbers.
 
-Rather click than type codes? On the [places page](https://shadcn-visited-map.vercel.app/places) you can mark any of the 195 countries (plus 50 territories such as Curaçao, Puerto Rico or Hong Kong), grouped by continent, add cities by hand (coordinates as copied from Google Maps), preview the map, and copy the generated code.
+Rather click than type codes? On the [builder](https://shadcn-visited-map.vercel.app/builder) you can mark any of the 195 countries (plus 50 territories such as Curaçao, Puerto Rico or Hong Kong), grouped by continent, add cities by hand (coordinates as copied from Google Maps), preview the map, and copy the generated code.
 
 ## Stats
 
-`getVisitedStats` takes the same props as the map and returns the share of the world's countries you've visited (wishlist excluded):
+Add `showStats` to show it on the map (a card on wide maps, a pill that expands on tap on narrow ones). For your own UI, `getVisitedStats` takes the same props as the map and returns the share of the world's countries you've visited (wishlist excluded):
 
 ```tsx
 import { getVisitedStats } from "@/components/visited-map"
@@ -91,6 +91,7 @@ The total is 195: the 193 UN member states plus the Vatican and Palestine. Small
 | `countries`   | `VisitedMapCountries` |         | Countries by status (ISO 3166-1 alpha-2 codes). Each is highlighted with its status color and gets a pin. |
 | `places`      | `VisitedMapPlace[]`   |         | Cities or any other point, e.g. Barcelona inside Spain.                                                   |
 | `countryPins` | `boolean`             | `true`  | Show a pin at the center of each country in `countries`.                                                  |
+| `showStats`   | `boolean`             | `false` | Show how much of the world you've seen: a card on wide maps, a pill that expands on tap on narrow ones.   |
 | `className`   | `string`              |         | Extra classes for the card container.                                                                     |
 
 ### `VisitedMapCountries`
@@ -140,10 +141,10 @@ npm run registry:build  # regenerates public/r/*.json from registry.json
 | `registry.json`                        | Registry definition read by `shadcn build`.                                                        |
 | `public/r/`                            | Built registry JSON served to `shadcn add`. Commit it.                                             |
 | `app/page.tsx`                         | Landing page with the demo map.                                                                    |
-| `app/(docs)/`                          | Docs (Get Started, API Reference, examples) and the `/places` builder, sharing the sidebar layout. |
+| `app/(docs)/`                          | Docs (Get Started, API Reference, examples) and the `/builder` page, sharing the sidebar layout. |
 | `lib/examples.ts`                      | Example maps and their code, shown under `/docs/examples`.                                         |
 | `lib/docs-nav.ts`                      | Top bar, sidebar and search navigation.                                                            |
-| `lib/regions.ts`                       | The 195 countries and 50 territories for the `/places` builder.                                    |
+| `lib/regions.ts`                       | The 195 countries and 50 territories for the `/builder` page.                                    |
 | `lib/country-centers.ts`               | Center points of each country and territory (Natural Earth label points).                          |
 
 After changing the component, run `npm run registry:build` and commit the updated `public/r/` so the deployed registry serves the new version.
@@ -152,4 +153,4 @@ The short install address (`crashncrow/shadcn-visited-map/visited-map`) reads th
 
 ## License
 
-[MIT](LICENSE). The component's country names and centers come from [Natural Earth](https://www.naturalearthdata.com) (public domain). The `/places` page also uses country names and continents from [mledoze/countries](https://github.com/mledoze/countries) ([ODbL](https://opendatacommons.org/licenses/odbl/1-0/)).
+[MIT](LICENSE). The component's country names and centers come from [Natural Earth](https://www.naturalearthdata.com) (public domain). The `/builder` page also uses country names and continents from [mledoze/countries](https://github.com/mledoze/countries) ([ODbL](https://opendatacommons.org/licenses/odbl/1-0/)).

@@ -76,7 +76,7 @@ export default function GetStartedPage() {
             API reference
           </Link>
           , or{" "}
-          <Link href="/places" className={linkClass}>
+          <Link href="/builder" className={linkClass}>
             build your countries and places
           </Link>{" "}
           by clicking instead of typing codes.

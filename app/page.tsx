@@ -2,12 +2,9 @@ import Link from "next/link"
 
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
-import { VisitedStatsCard } from "@/components/visited-stats-card"
 import { demoCountries, demoPlaces } from "@/lib/demo-places"
 import { legend } from "@/lib/legend"
-import { getVisitedStats, VisitedMap } from "@/registry/visited-map/visited-map"
-
-const stats = getVisitedStats({ countries: demoCountries, places: demoPlaces })
+import { VisitedMap } from "@/registry/visited-map/visited-map"
 
 export default function Home() {
   return (
@@ -28,7 +25,7 @@ export default function Home() {
             </Button>
             <Button
               variant="ghost"
-              render={<Link href="/places" />}
+              render={<Link href="/builder" />}
               nativeButton={false}
             >
               Build your map
@@ -37,14 +34,7 @@ export default function Home() {
         </section>
 
         <section className="flex flex-col gap-3">
-          {/* Stacked above the map on small screens, floating over the ocean on large ones. */}
-          <div className="flex flex-col gap-3 lg:relative">
-            <VisitedStatsCard
-              stats={stats}
-              className="lg:absolute lg:bottom-4 lg:left-4 lg:z-10 lg:w-52 lg:p-3.5"
-            />
-            <VisitedMap countries={demoCountries} places={demoPlaces} />
-          </div>
+          <VisitedMap countries={demoCountries} places={demoPlaces} showStats />
           <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
             {legend.map((item) => (
               <li key={item.variant} className="flex items-center gap-2">

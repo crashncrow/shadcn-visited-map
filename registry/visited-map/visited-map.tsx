@@ -320,6 +320,12 @@ export type VisitedMapProps = {
   places?: VisitedMapPlace[]
   /** Show a pin at the center of each country in `countries`. Defaults to true. */
   countryPins?: boolean
+  /**
+   * Show how much of the world you've seen (see `getVisitedStats`) in the
+   * bottom-left corner: a card on wide maps, a pill that expands on tap on
+   * narrow ones. Defaults to false.
+   */
+  showStats?: boolean
   className?: string
 }
 
@@ -494,10 +500,98 @@ export function getVisitedStats({
   }
 }
 
+function StatsBar({ stats }: { stats: VisitedMapStats }) {
+  return (
+    <div
+      role="progressbar"
+      aria-label="Countries visited"
+      aria-valuemin={0}
+      aria-valuemax={stats.total}
+      aria-valuenow={stats.visited}
+      className="h-1.5 overflow-hidden rounded-full bg-muted"
+    >
+      <div
+        className={cn(
+          "h-full rounded-full bg-sky-500 dark:bg-sky-400",
+          // Keep a sliver visible for tiny percentages.
+          stats.visited > 0 && "min-w-1.5",
+        )}
+        style={{ width: `${stats.percent}%` }}
+      />
+    </div>
+  )
+}
+
+function StatsCounts({ stats }: { stats: VisitedMapStats }) {
+  return (
+    <div className="flex items-center justify-between gap-3 text-xs">
+      <span className="flex items-center gap-2">
+        <span className="size-1.5 rounded-full bg-sky-500 dark:bg-sky-400" />
+        {stats.visited} of {stats.total} countries
+      </span>
+      <span className="text-muted-foreground">
+        {stats.total - stats.visited} left
+      </span>
+    </div>
+  )
+}
+
+// Which one shows depends on the map's own width (container queries), not the
+// window's, so it also fits a map in a narrow column.
+function StatsOverlay({ stats }: { stats: VisitedMapStats }) {
+  return (
+    <>
+      {/* Narrow maps: a pill that expands into the card. A native <details>,
+          so it works without JavaScript. */}
+      <details className="group/stats absolute bottom-2 left-2 z-20 rounded-full border bg-card/80 shadow-sm backdrop-blur-sm open:w-56 open:rounded-xl @3xl:hidden">
+        <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-full px-2.5 py-1 outline-none select-none group-open/stats:items-baseline group-open/stats:px-3 group-open/stats:pt-2.5 group-open/stats:pb-2 focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+          <span className="text-sm font-semibold tabular-nums group-open/stats:text-2xl group-open/stats:tracking-tight">
+            {stats.percent}%
+          </span>
+          <span className="hidden text-sm text-muted-foreground group-open/stats:inline">
+            of the world
+          </span>
+          <span className="sr-only group-open/stats:hidden">
+            of the world, show details
+          </span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+            className="ml-auto size-3.5 self-center text-muted-foreground transition-transform group-open/stats:rotate-180"
+          >
+            <path d="m18 15-6-6-6 6" />
+          </svg>
+        </summary>
+        <div className="flex flex-col gap-2.5 px-3 pb-3">
+          <StatsBar stats={stats} />
+          <StatsCounts stats={stats} />
+        </div>
+      </details>
+      {/* Wide maps: the full card. */}
+      <div className="absolute bottom-2 left-2 z-20 hidden w-52 flex-col gap-2.5 rounded-xl border bg-card/80 p-3.5 shadow-sm backdrop-blur-sm @3xl:flex">
+        <p className="flex items-baseline gap-2">
+          <span className="text-3xl font-semibold tracking-tight tabular-nums">
+            {stats.percent}%
+          </span>
+          <span className="text-sm text-muted-foreground">of the world</span>
+        </p>
+        <StatsBar stats={stats} />
+        <StatsCounts stats={stats} />
+      </div>
+    </>
+  )
+}
+
 export function VisitedMap({
   countries,
   places = [],
   countryPins = true,
+  showStats = false,
   className,
 }: VisitedMapProps) {
   const highlighted = resolveCountries(countries, places)
@@ -524,7 +618,7 @@ export function VisitedMap({
   return (
     <div
       data-slot="visited-map"
-      className={cn("rounded-xl border bg-card p-2", className)}
+      className={cn("@container rounded-xl border bg-card p-2", className)}
     >
       <div className="relative">
         <svg viewBox={viewBox} className="block h-auto w-full" aria-hidden>
@@ -584,6 +678,9 @@ export function VisitedMap({
             </li>
           ))}
         </ul>
+        {showStats && (
+          <StatsOverlay stats={getVisitedStats({ countries, places })} />
+        )}
       </div>
     </div>
   )

@@ -6,7 +6,6 @@ import { useId, useRef, useState } from "react"
 import { CopyButton } from "@/components/copy-button"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { VisitedStatsCard } from "@/components/visited-stats-card"
 import { countryCenters } from "@/lib/country-centers"
 import { legend } from "@/lib/legend"
 import { parseCoordinates } from "@/lib/parse-coordinates"
@@ -29,7 +28,6 @@ import {
 } from "@/lib/regions"
 import { cn } from "@/lib/utils"
 import {
-  getVisitedStats,
   VisitedMap,
   type VisitedMapCountries,
   type VisitedMapCountryCode,
@@ -380,7 +378,6 @@ export function PlacesBuilder() {
   const places = custom.map(({ name, coords, country, variant }) =>
     toPlace({ name, coords, ...(country && { country }) }, variant),
   )
-  const stats = getVisitedStats({ countries: mapCountries, places })
   const total = selected.length + custom.length
   const code = total > 0 ? toCode(mapCountries, places) : ""
 
@@ -419,13 +416,7 @@ export function PlacesBuilder() {
   return (
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-3">
-        <div className="flex flex-col gap-3 lg:relative">
-          <VisitedStatsCard
-            stats={stats}
-            className="lg:absolute lg:bottom-4 lg:left-4 lg:z-10 lg:w-52 lg:p-3.5"
-          />
-          <VisitedMap countries={mapCountries} places={places} />
-        </div>
+        <VisitedMap countries={mapCountries} places={places} showStats />
         <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
           {legend.map((item) => (
             <li key={item.variant} className="flex items-center gap-2">

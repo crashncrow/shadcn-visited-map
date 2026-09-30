@@ -8,8 +8,6 @@ export type Example = {
   /** Props for the live preview; `code` shows the same map. */
   props: VisitedMapProps
   code: string
-  /** Also render the stats card from `getVisitedStats`. */
-  withStats?: boolean
 }
 
 export const examples: Example[] = [
@@ -153,20 +151,16 @@ export function WithoutPinsMap() {
     slug: "stats",
     title: "Stats",
     description:
-      "getVisitedStats takes the same props as the map and counts your countries out of 195.",
-    withStats: true,
+      "showStats adds how much of the world you've seen: a card on wide maps, a pill that expands on tap on narrow ones. For your own UI, getVisitedStats returns the numbers.",
     props: {
       countries: {
         current: "AR",
         lived: ["ES", "UY"],
         visited: ["CL", "PE", "MX", "US", "GB", "DE", "IT", "MA", "JP", "TH"],
       },
+      showStats: true,
     },
-    code: `import {
-  getVisitedStats,
-  VisitedMap,
-  type VisitedMapCountries,
-} from "@/components/visited-map"
+    code: `import { VisitedMap, type VisitedMapCountries } from "@/components/visited-map"
 
 const countries: VisitedMapCountries = {
   current: "AR",
@@ -175,18 +169,11 @@ const countries: VisitedMapCountries = {
 }
 
 export function StatsMap() {
-  const { visited, total, percent } = getVisitedStats({ countries })
+  return <VisitedMap countries={countries} showStats />
+}
 
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">
-        <span className="text-2xl font-semibold text-foreground">{percent}%</span>{" "}
-        of the world · {visited} of {total} countries
-      </p>
-      <VisitedMap countries={countries} />
-    </div>
-  )
-}`,
+// Or build your own UI with the same numbers:
+// const { visited, total, percent } = getVisitedStats({ countries })`,
   },
   {
     slug: "territories",
