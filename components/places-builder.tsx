@@ -1,6 +1,12 @@
 "use client"
 
-import { PlusIcon, SearchIcon, TriangleAlertIcon, XIcon } from "lucide-react"
+import {
+  ChevronRightIcon,
+  PlusIcon,
+  SearchIcon,
+  TriangleAlertIcon,
+  XIcon,
+} from "lucide-react"
 import { useId, useRef, useState } from "react"
 
 import { CopyButton } from "@/components/copy-button"
@@ -386,6 +392,8 @@ export function PlacesBuilder() {
   const [tab, setTab] = useState<Tab>("countries")
   const [query, setQuery] = useState("")
   const [selectedOnly, setSelectedOnly] = useState(false)
+  // Open continents, keyed by tab and continent. All start collapsed.
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
 
   const selected = allRegions
     .filter((region) => regions[region.code])
@@ -416,6 +424,15 @@ export function PlacesBuilder() {
     return [{ continent, rows: groupRows, total: all.length, selected }]
   })
   const rows = groups.flatMap((group) => group.rows)
+  // Searching or showing only selected opens every continent, so all the
+  // matches are visible.
+  const filtering = Boolean(q) || selectedOnly
+  const toggleContinent = (key: string) =>
+    setExpanded((current) => {
+      const next = new Set(current)
+      if (!next.delete(key)) next.add(key)
+      return next
+    })
   const otherMatches = q ? other.regions.filter(matches).length : 0
   const selectedCount = active.regions.filter(
     (region) => regions[region.code],
@@ -677,50 +694,71 @@ export function PlacesBuilder() {
                     <th className="px-1.5 py-2 font-medium sm:px-2">Status</th>
                   </tr>
                 </thead>
-                {groups.map((group) => (
-                  <tbody key={group.continent}>
-                    <tr className="border-t bg-muted/30">
-                      <th
-                        scope="rowgroup"
-                        colSpan={3}
-                        className="px-3 py-1.5 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase sm:px-4"
-                      >
-                        {group.continent}{" "}
-                        <span className="font-normal tabular-nums normal-case">
-                          · {group.selected} / {group.total}
-                        </span>
-                      </th>
-                    </tr>
-                    {group.rows.map((region) => (
-                      <tr
-                        key={region.code}
-                        className={cn(
-                          "border-t",
-                          regions[region.code] && "bg-muted/40",
-                        )}
-                      >
-                        <td className="px-3 py-1.5 sm:px-4">
-                          <span className="font-medium">{region.name}</span>{" "}
-                          <span className="font-mono text-xs text-muted-foreground">
-                            {region.code}
-                          </span>
-                        </td>
-                        <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
-                          [{countryCenters[region.code].join(", ")}]
-                        </td>
-                        <td className="px-1.5 py-1.5 sm:px-2">
-                          <StatusButtons
-                            label={`Status for ${region.name}`}
-                            value={regions[region.code]}
-                            onSelect={(variant) =>
-                              toggleRegion(region.code, variant)
-                            }
-                          />
-                        </td>
+                {groups.map((group) => {
+                  const key = `${regionTab}:${group.continent}`
+                  const open = filtering || expanded.has(key)
+                  return (
+                    <tbody key={group.continent}>
+                      <tr className="border-t bg-muted/30">
+                        <th scope="rowgroup" colSpan={3} className="p-0">
+                          <button
+                            type="button"
+                            aria-expanded={open}
+                            disabled={filtering}
+                            onClick={() => toggleContinent(key)}
+                            className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase transition-colors outline-none hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:pointer-events-none sm:px-4"
+                          >
+                            <ChevronRightIcon
+                              aria-hidden
+                              className={cn(
+                                "size-3.5 shrink-0 transition-transform",
+                                open && "rotate-90",
+                              )}
+                            />
+                            {group.continent}
+                            {/* Highlighted when the continent has a selection,
+                                so it shows even while collapsed. */}
+                            <CountPill
+                              active={group.selected > 0}
+                              className="ml-1 font-normal tracking-normal normal-case"
+                            >
+                              {group.selected} / {group.total}
+                            </CountPill>
+                          </button>
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                ))}
+                      {open &&
+                        group.rows.map((region) => (
+                          <tr
+                            key={region.code}
+                            className={cn(
+                              "border-t",
+                              regions[region.code] && "bg-muted/40",
+                            )}
+                          >
+                            <td className="px-3 py-1.5 sm:px-4">
+                              <span className="font-medium">{region.name}</span>{" "}
+                              <span className="font-mono text-xs text-muted-foreground">
+                                {region.code}
+                              </span>
+                            </td>
+                            <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
+                              [{countryCenters[region.code].join(", ")}]
+                            </td>
+                            <td className="px-1.5 py-1.5 sm:px-2">
+                              <StatusButtons
+                                label={`Status for ${region.name}`}
+                                value={regions[region.code]}
+                                onSelect={(variant) =>
+                                  toggleRegion(region.code, variant)
+                                }
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  )
+                })}
                 {rows.length === 0 && (
                   <tbody>
                     <tr className="border-t">
