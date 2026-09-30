@@ -1,4 +1,4 @@
-# Visited Map
+# <img src="app/icon.svg" width="28" height="28" alt="" /> Visited Map
 
 An SVG world map for [shadcn/ui](https://ui.shadcn.com) that highlights the countries you've been to, pins cities on top, and counts how much of the world you've seen.
 
