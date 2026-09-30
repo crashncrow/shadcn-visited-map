@@ -1,13 +1,12 @@
+import Link from "next/link"
+
 import { CodeBlock } from "@/components/code-block"
 import { InstallTabs } from "@/components/install-tabs"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { VisitedStatsCard } from "@/components/visited-stats-card"
 import { demoPlaces } from "@/lib/demo-places"
-import {
-  getVisitedStats,
-  VisitedMap,
-  type VisitedMapVariant,
-} from "@/registry/visited-map/visited-map"
+import { legend } from "@/lib/legend"
+import { getVisitedStats, VisitedMap } from "@/registry/visited-map/visited-map"
 
 const usageImport = `import { VisitedMap, type VisitedMapPlace } from "@/components/visited-map"`
 
@@ -33,21 +32,6 @@ const { visited, total, percent } = getVisitedStats(places, ["UY"])
 // → { visited: 4, total: 195, percent: 2.1 }`
 
 const stats = getVisitedStats(demoPlaces)
-
-const legend: { variant: VisitedMapVariant; label: string; dot: string }[] = [
-  { variant: "visited", label: "Visited", dot: "bg-sky-500 dark:bg-sky-400" },
-  {
-    variant: "lived",
-    label: "Lived",
-    dot: "bg-emerald-500 dark:bg-emerald-400",
-  },
-  {
-    variant: "wishlist",
-    label: "Wishlist",
-    dot: "border-2 border-amber-500 bg-amber-400/25 dark:border-amber-300",
-  },
-  { variant: "current", label: "Current", dot: "bg-rose-500 dark:bg-rose-400" },
-]
 
 const props = [
   {
@@ -185,6 +169,17 @@ export default function Home() {
       <Section title="Usage">
         <CodeBlock code={usageImport} />
         <CodeBlock code={usageExample} />
+        <p className="text-sm text-muted-foreground">
+          Need coordinates?{" "}
+          <Link
+            href="/places"
+            className="font-medium text-foreground underline underline-offset-4"
+          >
+            Mark the countries you&apos;ve been to or add your own places
+          </Link>{" "}
+          and copy the generated{" "}
+          <code className="font-mono text-foreground">places</code>.
+        </p>
       </Section>
 
       <Section title="Stats">

@@ -75,6 +75,8 @@ export default function Page() {
 > [!IMPORTANT]
 > Coordinates go in **`[longitude, latitude]`** order (the GeoJSON convention). Google Maps copies them as `lat, lng`, so swap the two numbers.
 
+Need coordinates? On the [places page](https://shadcn-visited-map.vercel.app/places) you can mark any of the 195 countries (plus 51 territories such as Curaçao, Puerto Rico or Hong Kong), grouped by continent, as visited, lived, wishlist or current, with a pin at its center, add cities or other places by hand (coordinates as copied from Google Maps), preview the map, and copy the generated `places`. Territories are never counted in the stats.
+
 ## Stats
 
 `getVisitedStats` returns the share of the world's countries you've visited, counting the same countries the map highlights (wishlist excluded):
@@ -128,12 +130,14 @@ npm run dev             # docs site on http://localhost:3000
 npm run registry:build  # regenerates public/r/*.json from registry.json
 ```
 
-| Path                                   | What it is                                             |
-| -------------------------------------- | ------------------------------------------------------ |
-| `registry/visited-map/visited-map.tsx` | The component (source of truth).                       |
-| `registry.json`                        | Registry definition read by `shadcn build`.            |
-| `public/r/`                            | Built registry JSON served to `shadcn add`. Commit it. |
-| `app/page.tsx`                         | Docs and demo page.                                    |
+| Path                                   | What it is                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------- |
+| `registry/visited-map/visited-map.tsx` | The component (source of truth).                                          |
+| `registry.json`                        | Registry definition read by `shadcn build`.                               |
+| `public/r/`                            | Built registry JSON served to `shadcn add`. Commit it.                    |
+| `app/page.tsx`                         | Docs and demo page.                                                       |
+| `lib/regions.ts`                       | The 195 countries and 51 territories for the `/places` builder.           |
+| `lib/country-centers.ts`               | Center points of each country and territory (Natural Earth label points). |
 
 After changing the component, run `npm run registry:build` and commit the updated `public/r/` so the deployed registry serves the new version.
 
@@ -141,4 +145,4 @@ The short install address (`crashncrow/shadcn-visited-map/visited-map`) reads th
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). Country centers come from [Natural Earth](https://www.naturalearthdata.com) (public domain) and country names from [mledoze/countries](https://github.com/mledoze/countries) ([ODbL](https://opendatacommons.org/licenses/odbl/1-0/)).
