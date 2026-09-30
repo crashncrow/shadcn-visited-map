@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { SiteHeader } from "@/components/site/site-header"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { siteUrl } from "@/lib/site"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -23,6 +24,32 @@ export const metadata: Metadata = {
   },
   description:
     "An SVG world map for shadcn/ui that highlights the countries you've visited, pins cities and counts how much of the world you've seen.",
+  metadataBase: new URL(siteUrl),
+  applicationName: "Visited Map",
+  authors: [{ name: "@_nnaro_", url: "https://x.com/_nnaro_" }],
+  keywords: [
+    "shadcn",
+    "shadcn/ui",
+    "registry",
+    "world map",
+    "visited countries",
+    "travel map",
+    "React",
+    "Next.js",
+    "SVG",
+  ],
+  alternates: { canonical: "/" },
+  // Each page's title and description fill og:* and twitter:* on their own;
+  // the image comes from app/opengraph-image.tsx.
+  openGraph: {
+    type: "website",
+    siteName: "Visited Map",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    creator: "@_nnaro_",
+  },
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

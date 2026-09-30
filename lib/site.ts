@@ -13,3 +13,6 @@ export const installCommands: Record<PackageManager, string> = {
   yarn: `yarn shadcn@latest add ${installTarget}`,
   bun: `bunx --bun shadcn@latest add ${installTarget}`,
 }
+
+/** Production URL: base for canonical links, the share image and sitemap. */
+export const siteUrl = "https://shadcn-visited-map.vercel.app"

@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { ExamplePage } from "@/components/site/example-page"
-import { examples } from "@/lib/examples"
+import { exampleHref, examples } from "@/lib/examples"
 
 // The first example lives at /docs/examples, so it has no slug here.
 export function generateStaticParams() {
@@ -22,7 +22,11 @@ export async function generateMetadata({
 }: PageProps<"/docs/examples/[slug]">): Promise<Metadata> {
   const example = findExample((await params).slug)
   return example
-    ? { title: example.title, description: example.description }
+    ? {
+        title: example.title,
+        description: example.description,
+        alternates: { canonical: exampleHref(example) },
+      }
     : {}
 }
 

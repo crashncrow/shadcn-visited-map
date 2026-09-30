@@ -8,6 +8,7 @@ const example = examples[0]
 export const metadata: Metadata = {
   title: example.title,
   description: example.description,
+  alternates: { canonical: "/docs/examples" },
 }
 
 export default function ExamplesIndexPage() {

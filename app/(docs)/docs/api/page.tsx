@@ -7,6 +7,7 @@ import { PropsTable, type PropRow } from "@/components/site/props-table"
 export const metadata: Metadata = {
   title: "API Reference",
   description: "Props, types and helpers of the Visited Map component.",
+  alternates: { canonical: "/docs/api" },
 }
 
 const props: PropRow[] = [

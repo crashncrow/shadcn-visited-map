@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Get Started",
   description:
     "Install the Visited Map component for shadcn/ui and render your first map.",
+  alternates: { canonical: "/docs" },
 }
 
 const usageImport = `import {

@@ -7,15 +7,14 @@ export const metadata: Metadata = {
   title: "Map Builder",
   description:
     "Mark the countries and territories you've been to, add your own places, and generate the places for Visited Map.",
+  alternates: { canonical: "/builder" },
 }
 
 export default function PlacesPage() {
   return (
     <div className="docs-center flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Map Builder
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Map Builder</h1>
         <p className="text-muted-foreground">
           Mark the {flattenRegions(countries).length} countries and{" "}
           {flattenRegions(territories).length} territories as visited, lived,
