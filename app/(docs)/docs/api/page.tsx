@@ -35,9 +35,17 @@ const props: PropRow[] = [
       "Show how much of the world you've seen in the bottom-left corner: a card on wide maps, a pill that expands on tap on narrow ones.",
   },
   {
+    name: "showLegend",
+    type: 'boolean | "all"',
+    default: "false",
+    description:
+      'Show a legend under the map. true lists the statuses in use; "all" always lists all four, e.g. to explain a status picker.',
+  },
+  {
     name: "className",
     type: "string",
-    description: "Extra classes for the card container.",
+    description:
+      "Extra classes for the root element (the map card and its legend).",
   },
 ]
 
@@ -118,6 +126,17 @@ const variants = [
   },
 ]
 
+const swatchCode = `import { visitedMapVariants, VisitedMapSwatch } from "@/components/visited-map"
+
+<ul className="flex gap-4 text-sm">
+  {visitedMapVariants.map(({ variant, label }) => (
+    <li key={variant} className="flex items-center gap-1.5">
+      <VisitedMapSwatch variant={variant} />
+      {label}
+    </li>
+  ))}
+</ul>`
+
 const statsCode = `import { getVisitedStats } from "@/components/visited-map"
 
 const { visited, total, percent } = getVisitedStats({ countries, places })
@@ -193,6 +212,16 @@ export default function ApiReferencePage() {
           </code>{" "}
           after installing.
         </p>
+      </DocsSection>
+
+      <DocsSection title="VisitedMapSwatch">
+        <p className="text-muted-foreground">
+          A status&apos;s pin, drawn exactly like on the map, plus{" "}
+          <code className="font-mono text-foreground">visitedMapVariants</code>,
+          every status with its label in legend order. Use them to build your
+          own legend or filters.
+        </p>
+        <CodeBlock code={swatchCode} />
       </DocsSection>
 
       <DocsSection title="getVisitedStats">

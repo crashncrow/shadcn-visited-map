@@ -75,13 +75,14 @@ export function CitiesMap() {
     slug: "current",
     title: "Current Location",
     description:
-      "Mark where you are now with current. Its pin pulses and is always drawn on top.",
+      "Mark where you are now with current. Its pin pulses and is always drawn on top. showLegend lists the statuses in use under the map.",
     props: {
       countries: {
         current: "AR",
         lived: ["UY"],
         visited: ["CL", "BR", "PE", "CO", "MX"],
       },
+      showLegend: true,
     },
     code: `import { VisitedMap } from "@/components/visited-map"
 
@@ -93,6 +94,7 @@ export function CurrentMap() {
         lived: ["UY"],
         visited: ["CL", "BR", "PE", "CO", "MX"],
       }}
+      showLegend
     />
   )
 }`,

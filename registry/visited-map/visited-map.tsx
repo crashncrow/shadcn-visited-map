@@ -326,6 +326,12 @@ export type VisitedMapProps = {
    * narrow ones. Defaults to false.
    */
   showStats?: boolean
+  /**
+   * Show a legend under the map: `true` lists the statuses in use, `"all"`
+   * always lists all four (e.g. to explain a status picker). Defaults to false.
+   */
+  showLegend?: boolean | "all"
+  /** Extra classes for the root element: the map card and its legend. */
   className?: string
 }
 
@@ -392,6 +398,38 @@ const pinStyles: Record<VisitedMapVariant, string> = {
     "fill-amber-400/25 stroke-amber-500 dark:fill-amber-300/20 dark:stroke-amber-300",
   current:
     "fill-rose-500 stroke-rose-700 dark:fill-rose-400 dark:stroke-rose-200",
+}
+
+/** Every status with its label, in legend order. */
+export const visitedMapVariants: {
+  variant: VisitedMapVariant
+  label: string
+}[] = [
+  { variant: "visited", label: "Visited" },
+  { variant: "lived", label: "Lived" },
+  { variant: "wishlist", label: "Wishlist" },
+  { variant: "current", label: "Current" },
+]
+
+/** A status's pin, drawn like on the map. Handy for your own legend or filters. */
+export function VisitedMapSwatch({
+  variant,
+  className,
+}: {
+  variant: VisitedMapVariant
+  className?: string
+}) {
+  return (
+    <svg viewBox="0 0 10 10" aria-hidden className={cn("size-3", className)}>
+      <circle
+        cx={5}
+        cy={5}
+        r={4}
+        strokeWidth={1.5}
+        className={pinStyles[variant]}
+      />
+    </svg>
+  )
 }
 
 const countryStyles: Record<VisitedMapVariant, string> = {
@@ -592,6 +630,7 @@ export function VisitedMap({
   places = [],
   countryPins = true,
   showStats = false,
+  showLegend = false,
   className,
 }: VisitedMapProps) {
   const highlighted = resolveCountries(countries, places)
@@ -615,73 +654,100 @@ export function VisitedMap({
     })),
   ])
 
+  const usedVariants = new Set<VisitedMapVariant>([
+    ...highlighted.values(),
+    ...points.map((point) => point.variant),
+  ])
+  const legendItems =
+    showLegend === "all"
+      ? visitedMapVariants
+      : visitedMapVariants.filter((item) => usedVariants.has(item.variant))
+
   return (
     <div
       data-slot="visited-map"
-      className={cn("@container rounded-xl border bg-card p-2", className)}
+      className={cn("flex flex-col gap-3", className)}
     >
-      <div className="relative">
-        <svg viewBox={viewBox} className="block h-auto w-full" aria-hidden>
-          <g className="fill-muted stroke-border" strokeWidth={0.5}>
-            {countryPaths.map(({ key, code, d }) => {
-              const variant = code ? highlighted.get(code) : undefined
-              return (
-                <path
-                  key={key}
-                  d={d}
-                  data-country={code}
-                  data-variant={variant}
-                  className={variant ? countryStyles[variant] : undefined}
-                />
-              )
-            })}
-          </g>
-          {points.map((point) => (
-            <g
-              key={point.key}
-              data-variant={point.variant}
-              className={pinStyles[point.variant]}
-            >
-              {point.variant === "current" && (
+      <div
+        data-slot="visited-map-card"
+        className="@container rounded-xl border bg-card p-2"
+      >
+        <div className="relative">
+          <svg viewBox={viewBox} className="block h-auto w-full" aria-hidden>
+            <g className="fill-muted stroke-border" strokeWidth={0.5}>
+              {countryPaths.map(({ key, code, d }) => {
+                const variant = code ? highlighted.get(code) : undefined
+                return (
+                  <path
+                    key={key}
+                    d={d}
+                    data-country={code}
+                    data-variant={variant}
+                    className={variant ? countryStyles[variant] : undefined}
+                  />
+                )
+              })}
+            </g>
+            {points.map((point) => (
+              <g
+                key={point.key}
+                data-variant={point.variant}
+                className={pinStyles[point.variant]}
+              >
+                {point.variant === "current" && (
+                  <circle
+                    cx={point.cx}
+                    cy={point.cy}
+                    r={5}
+                    className="origin-center animate-ping stroke-none opacity-75 transform-fill"
+                  />
+                )}
                 <circle
                   cx={point.cx}
                   cy={point.cy}
-                  r={5}
-                  className="origin-center animate-ping stroke-none opacity-75 transform-fill"
+                  r={point.variant === "current" ? 5 : 4}
+                  strokeWidth={1.5}
                 />
-              )}
-              <circle
-                cx={point.cx}
-                cy={point.cy}
-                r={point.variant === "current" ? 5 : 4}
-                strokeWidth={1.5}
-              />
-            </g>
-          ))}
-        </svg>
-        {/*
+              </g>
+            ))}
+          </svg>
+          {/*
           Tooltips are plain HTML laid over the SVG so their text doesn't shrink
           with the map. Each hit area is focusable, so hover, click/tap and
           keyboard focus all show the tooltip with CSS only (no JS needed).
         */}
-        <ul aria-label="Places" className="absolute inset-0">
-          {points.map((point) => (
-            <li
-              key={point.key}
-              tabIndex={0}
-              className="group absolute size-5 -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-full outline-none hover:z-10 focus:z-10 focus-visible:ring-2 focus-visible:ring-ring"
-              style={{ left: `${point.left}%`, top: `${point.top}%` }}
-            >
-              <span className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 rounded-md border bg-popover px-2 py-1 text-xs whitespace-nowrap text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus:opacity-100">
-                {point.name}
-              </span>
+          <ul aria-label="Places" className="absolute inset-0">
+            {points.map((point) => (
+              <li
+                key={point.key}
+                tabIndex={0}
+                className="group absolute size-5 -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-full outline-none hover:z-10 focus:z-10 focus-visible:ring-2 focus-visible:ring-ring"
+                style={{ left: `${point.left}%`, top: `${point.top}%` }}
+              >
+                <span className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 rounded-md border bg-popover px-2 py-1 text-xs whitespace-nowrap text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus:opacity-100">
+                  {point.name}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {showStats && (
+            <StatsOverlay stats={getVisitedStats({ countries, places })} />
+          )}
+        </div>
+      </div>
+      {showLegend && legendItems.length > 0 && (
+        <ul
+          aria-label="Legend"
+          className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground"
+        >
+          {legendItems.map((item) => (
+            <li key={item.variant} className="flex items-center gap-2">
+              <VisitedMapSwatch variant={item.variant} />
+              {item.label}
             </li>
           ))}
         </ul>
-        {showStats && (
-          <StatsOverlay stats={getVisitedStats({ countries, places })} />
-        )}
-      </div>
+      )}
     </div>
   )
 }

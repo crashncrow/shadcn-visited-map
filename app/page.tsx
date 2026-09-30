@@ -3,7 +3,6 @@ import Link from "next/link"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { demoCountries, demoPlaces } from "@/lib/demo-places"
-import { legend } from "@/lib/legend"
 import { VisitedMap } from "@/registry/visited-map/visited-map"
 
 export default function Home() {
@@ -34,15 +33,12 @@ export default function Home() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <VisitedMap countries={demoCountries} places={demoPlaces} showStats />
-          <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-            {legend.map((item) => (
-              <li key={item.variant} className="flex items-center gap-2">
-                <span className={`size-3 rounded-full ${item.dot}`} />
-                {item.label}
-              </li>
-            ))}
-          </ul>
+          <VisitedMap
+            countries={demoCountries}
+            places={demoPlaces}
+            showStats
+            showLegend
+          />
         </section>
       </main>
       <SiteFooter />

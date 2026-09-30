@@ -92,7 +92,8 @@ The total is 195: the 193 UN member states plus the Vatican and Palestine. Small
 | `places`      | `VisitedMapPlace[]`   |         | Cities or any other point, e.g. Barcelona inside Spain.                                                   |
 | `countryPins` | `boolean`             | `true`  | Show a pin at the center of each country in `countries`.                                                  |
 | `showStats`   | `boolean`             | `false` | Show how much of the world you've seen: a card on wide maps, a pill that expands on tap on narrow ones.   |
-| `className`   | `string`              |         | Extra classes for the card container.                                                                     |
+| `showLegend`  | `boolean \| "all"`    | `false` | Show a legend under the map: `true` lists the statuses in use, `"all"` always lists all four.             |
+| `className`   | `string`              |         | Extra classes for the root element (the map card and its legend).                                         |
 
 ### `VisitedMapCountries`
 
@@ -135,17 +136,17 @@ npm run dev             # docs site on http://localhost:3000
 npm run registry:build  # regenerates public/r/*.json from registry.json
 ```
 
-| Path                                   | What it is                                                                                         |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `registry/visited-map/visited-map.tsx` | The component (source of truth).                                                                   |
-| `registry.json`                        | Registry definition read by `shadcn build`.                                                        |
-| `public/r/`                            | Built registry JSON served to `shadcn add`. Commit it.                                             |
-| `app/page.tsx`                         | Landing page with the demo map.                                                                    |
+| Path                                   | What it is                                                                                       |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `registry/visited-map/visited-map.tsx` | The component (source of truth).                                                                 |
+| `registry.json`                        | Registry definition read by `shadcn build`.                                                      |
+| `public/r/`                            | Built registry JSON served to `shadcn add`. Commit it.                                           |
+| `app/page.tsx`                         | Landing page with the demo map.                                                                  |
 | `app/(docs)/`                          | Docs (Get Started, API Reference, examples) and the `/builder` page, sharing the sidebar layout. |
-| `lib/examples.ts`                      | Example maps and their code, shown under `/docs/examples`.                                         |
-| `lib/docs-nav.ts`                      | Top bar, sidebar and search navigation.                                                            |
+| `lib/examples.ts`                      | Example maps and their code, shown under `/docs/examples`.                                       |
+| `lib/docs-nav.ts`                      | Top bar, sidebar and search navigation.                                                          |
 | `lib/regions.ts`                       | The 195 countries and 50 territories for the `/builder` page.                                    |
-| `lib/country-centers.ts`               | Center points of each country and territory (Natural Earth label points).                          |
+| `lib/country-centers.ts`               | Center points of each country and territory (Natural Earth label points).                        |
 
 After changing the component, run `npm run registry:build` and commit the updated `public/r/` so the deployed registry serves the new version.
 

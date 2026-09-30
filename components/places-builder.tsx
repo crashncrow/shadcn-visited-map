@@ -7,7 +7,6 @@ import { CopyButton } from "@/components/copy-button"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { countryCenters } from "@/lib/country-centers"
-import { legend } from "@/lib/legend"
 import { parseCoordinates } from "@/lib/parse-coordinates"
 import {
   addCustomPlace,
@@ -29,6 +28,8 @@ import {
 import { cn } from "@/lib/utils"
 import {
   VisitedMap,
+  visitedMapVariants,
+  VisitedMapSwatch,
   type VisitedMapCountries,
   type VisitedMapCountryCode,
   type VisitedMapPlace,
@@ -170,10 +171,12 @@ function normalize(text: string) {
 }
 
 function CountPill({
-  active,
+  active = false,
+  className,
   children,
 }: {
-  active: boolean
+  active?: boolean
+  className?: string
   children: React.ReactNode
 }) {
   return (
@@ -183,6 +186,7 @@ function CountPill({
         active
           ? "bg-background text-foreground"
           : "bg-muted text-muted-foreground",
+        className,
       )}
     >
       {children}
@@ -201,7 +205,7 @@ function StatusButtons({
 }) {
   return (
     <div role="group" aria-label={label} className="flex items-center gap-0.5">
-      {legend.map((item) => {
+      {visitedMapVariants.map((item) => {
         const active = value === item.variant
         return (
           <button
@@ -216,10 +220,10 @@ function StatusButtons({
               active && "bg-muted ring-1 ring-border",
             )}
           >
-            <span
+            <VisitedMapSwatch
+              variant={item.variant}
               className={cn(
-                "size-3 rounded-full transition-opacity",
-                item.dot,
+                "transition-opacity",
                 !active && "opacity-25 group-hover/status:opacity-70",
               )}
             />
@@ -416,24 +420,22 @@ export function PlacesBuilder() {
   return (
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-3">
-        <VisitedMap countries={mapCountries} places={places} showStats />
-        <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-          {legend.map((item) => (
-            <li key={item.variant} className="flex items-center gap-2">
-              <span className={cn("size-3 rounded-full", item.dot)} />
-              {item.label}
-            </li>
-          ))}
-        </ul>
+        {/* "all": the legend also explains the status buttons in the table. */}
+        <VisitedMap
+          countries={mapCountries}
+          places={places}
+          showStats
+          showLegend="all"
+        />
       </section>
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold tracking-tight">
-            Your places{" "}
-            <span className="font-normal text-muted-foreground tabular-nums">
-              ({total})
-            </span>
+          <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+            Your places
+            <CountPill className="font-medium tracking-normal">
+              {total}
+            </CountPill>
           </h2>
           {total > 0 && (
             <div className="flex items-center gap-2">
