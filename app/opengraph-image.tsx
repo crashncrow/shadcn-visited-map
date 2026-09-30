@@ -7,21 +7,42 @@ import { countryCenters } from "@/lib/country-centers"
 import { demoCountries } from "@/lib/demo-places"
 import { getVisitedStats } from "@/registry/visited-map/visited-map"
 
+// Share image for link previews, in the dark theme. Twitter/X cards use it
+// too: Next copies og:image into twitter:image.
+
 export const alt =
   "Visited Map: a world map for shadcn/ui with visited, lived and wishlist countries"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 
-// Satori can't read Tailwind classes, so the demo map is drawn again here as a
-// plain SVG with the same projection and the light theme's colors.
-const colors = {
-  visited: { tint: "#0ea5e940", pin: "#0ea5e9", stroke: "#0369a1" },
-  lived: { tint: "#10b98140", pin: "#10b981", stroke: "#047857" },
-  wishlist: { tint: "#fbbf2440", pin: "#fbbf2440", stroke: "#f59e0b" },
-  current: { tint: "#f43f5e40", pin: "#f43f5e", stroke: "#be123c" },
+type Variant = "visited" | "lived" | "wishlist" | "current"
+
+type Theme = {
+  background: string
+  foreground: string
+  muted: string
+  border: string
+  land: string
+  landStroke: string
+  colors: Record<Variant, { tint: string; pin: string; stroke: string }>
 }
 
-type Variant = keyof typeof colors
+// Satori can't read Tailwind classes, so the demo map is drawn again here as a
+// plain SVG with the same projection and the dark theme's colors.
+const theme: Theme = {
+  background: "#0a0a0a",
+  foreground: "#fafafa",
+  muted: "#a1a1a1",
+  border: "#2e2e2e",
+  land: "#262626",
+  landStroke: "#3f3f3f",
+  colors: {
+    visited: { tint: "#38bdf833", pin: "#38bdf8", stroke: "#bae6fd" },
+    lived: { tint: "#34d39933", pin: "#34d399", stroke: "#a7f3d0" },
+    wishlist: { tint: "#fcd34d26", pin: "#fcd34d33", stroke: "#fcd34d" },
+    current: { tint: "#fb718533", pin: "#fb7185", stroke: "#fecdd3" },
+  },
+}
 
 // world-atlas ids (ISO 3166-1 numeric) of the demo countries.
 const numericIds: Record<string, string> = {
@@ -58,7 +79,7 @@ function demoVariants() {
   return variants
 }
 
-function mapSvg() {
+function mapSvg({ colors, land, landStroke }: Theme) {
   const topology = worldAtlas as unknown as Parameters<typeof feature>[0]
   const { features } = feature(
     topology,
@@ -88,8 +109,8 @@ function mapSvg() {
   const countries = world.features
     .map((country) => {
       const variant = variantById.get(String(country.id))
-      const fill = variant ? colors[variant].tint : "#f4f4f5"
-      return `<path d="${path(country) ?? ""}" fill="${fill}" stroke="#d4d4d8" stroke-width="0.5"/>`
+      const fill = variant ? colors[variant].tint : land
+      return `<path d="${path(country) ?? ""}" fill="${fill}" stroke="${landStroke}" stroke-width="0.5"/>`
     })
     .join("")
 
@@ -109,7 +130,8 @@ function mapSvg() {
   return { svg, ratio: box.height / box.width }
 }
 
-const logo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 19-1.106-.552a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0l4.212 2.106a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619V12"/><path d="M15 5.764V12"/><path d="M9 3.236v15"/><path d="m15 19 2 2 4-4"/></svg>`
+const logo = (color: string) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 19-1.106-.552a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0l4.212 2.106a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619V12"/><path d="M15 5.764V12"/><path d="M9 3.236v15"/><path d="m15 19 2 2 4-4"/></svg>`
 
 function dataUri(svg: string) {
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`
@@ -123,7 +145,8 @@ const legend: { variant: Variant; label: string }[] = [
 ]
 
 export default function Image() {
-  const map = mapSvg()
+  const { colors } = theme
+  const map = mapSvg(theme)
   const mapHeight = 440
   const mapWidth = Math.round(mapHeight / map.ratio)
   const stats = getVisitedStats({ countries: demoCountries })
@@ -137,25 +160,30 @@ export default function Image() {
         alignItems: "center",
         gap: 48,
         padding: 48,
-        background: "#ffffff",
-        color: "#18181b",
+        background: theme.background,
+        color: theme.foreground,
       }}
     >
       <div
         style={{ flex: 1, display: "flex", flexDirection: "column", gap: 20 }}
       >
-        <img src={dataUri(logo)} width={60} height={60} alt="" />
+        <img
+          src={dataUri(logo(theme.foreground))}
+          width={60}
+          height={60}
+          alt=""
+        />
         <div style={{ fontSize: 54, lineHeight: 1.1, letterSpacing: -2 }}>
           A visited map for shadcn/ui
         </div>
-        <div style={{ fontSize: 24, lineHeight: 1.4, color: "#71717a" }}>
+        <div style={{ fontSize: 24, lineHeight: 1.4, color: theme.muted }}>
           Countries, cities and how much of the world you&apos;ve seen.
         </div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
           <div style={{ fontSize: 44, letterSpacing: -1.5 }}>
             {`${stats.percent}%`}
           </div>
-          <div style={{ fontSize: 22, color: "#71717a" }}>of the world</div>
+          <div style={{ fontSize: 22, color: theme.muted }}>of the world</div>
         </div>
         <div
           style={{
@@ -164,7 +192,7 @@ export default function Image() {
             columnGap: 22,
             rowGap: 10,
             fontSize: 21,
-            color: "#71717a",
+            color: theme.muted,
           }}
         >
           {legend.map(({ variant, label }) => (
@@ -190,7 +218,7 @@ export default function Image() {
         style={{
           display: "flex",
           padding: 12,
-          border: "1px solid #e4e4e7",
+          border: `1px solid ${theme.border}`,
           borderRadius: 24,
         }}
       >
