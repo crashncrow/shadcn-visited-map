@@ -4,6 +4,7 @@ import Link from "next/link"
 import { CodeBlock } from "@/components/code-block"
 import { InstallTabs } from "@/components/install-tabs"
 import { DocsPage, DocsSection } from "@/components/site/docs-page"
+import { usageExample, usageImport } from "@/lib/api-docs"
 
 export const metadata: Metadata = {
   title: "Get Started",
@@ -11,26 +12,6 @@ export const metadata: Metadata = {
     "Install the Visited Map component for shadcn/ui and render your first map.",
   alternates: { canonical: "/docs" },
 }
-
-const usageImport = `import {
-  VisitedMap,
-  type VisitedMapCountries,
-  type VisitedMapPlace,
-} from "@/components/visited-map"`
-
-const usageExample = `const countries: VisitedMapCountries = {
-  current: "AR",
-  lived: ["IT"],
-  visited: ["BR", "JP", "US"],
-  wishlist: ["AU"],
-}
-
-// Cities or any other point. coords are [lng, lat], not [lat, lng]
-const places: VisitedMapPlace[] = [
-  { name: "Barcelona", coords: [2.17, 41.39], country: "ES" },
-]
-
-<VisitedMap countries={countries} places={places} className="max-w-3xl" />`
 
 const linkClass = "font-medium text-foreground underline underline-offset-4"
 

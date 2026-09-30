@@ -2,119 +2,19 @@ import type { Metadata } from "next"
 
 import { CodeBlock } from "@/components/code-block"
 import { DocsPage, DocsSection } from "@/components/site/docs-page"
-import { PropsTable, type PropRow } from "@/components/site/props-table"
+import { PropsTable } from "@/components/site/props-table"
+import {
+  countriesFields,
+  placeFields,
+  statsFields,
+  visitedMapProps,
+} from "@/lib/api-docs"
 
 export const metadata: Metadata = {
   title: "API Reference",
   description: "Props, types and helpers of the Visited Map component.",
   alternates: { canonical: "/docs/api" },
 }
-
-const props: PropRow[] = [
-  {
-    name: "countries",
-    type: "VisitedMapCountries",
-    description:
-      "Countries by status (ISO 3166-1 alpha-2 codes). Each is highlighted with its status color and gets a pin at its center.",
-  },
-  {
-    name: "places",
-    type: "VisitedMapPlace[]",
-    description: "Cities or any other point, e.g. Barcelona inside Spain.",
-  },
-  {
-    name: "countryPins",
-    type: "boolean",
-    default: "true",
-    description: "Show a pin at the center of each country in countries.",
-  },
-  {
-    name: "hideStats",
-    type: "boolean",
-    default: "false",
-    description:
-      "Hide how much of the world you've seen, shown by default in the bottom-left corner: a card on wide maps, a pill that expands on tap on narrow ones.",
-  },
-  {
-    name: "hideLegend",
-    type: "boolean",
-    default: "false",
-    description:
-      "Hide the legend under the map, which lists the statuses in use.",
-  },
-  {
-    name: "className",
-    type: "string",
-    description:
-      "Extra classes for the root element (the map card and its legend).",
-  },
-]
-
-const countriesFields: PropRow[] = [
-  {
-    name: "current",
-    type: "VisitedMapCountryCode",
-    description: "Where you are now. Its pin pulses.",
-  },
-  {
-    name: "lived",
-    type: "VisitedMapCountryCode[]",
-    description: "Countries you've lived in.",
-  },
-  {
-    name: "visited",
-    type: "VisitedMapCountryCode[]",
-    description: "Countries you've been to.",
-  },
-  {
-    name: "wishlist",
-    type: "VisitedMapCountryCode[]",
-    description: "Countries you want to visit. Not counted in the stats.",
-  },
-]
-
-const placeFields: PropRow[] = [
-  {
-    name: "name",
-    type: "string",
-    description: "Shown in a tooltip on hover, click/tap or keyboard focus.",
-  },
-  {
-    name: "coords",
-    type: "[lng, lat]",
-    description: "Longitude first, then latitude (GeoJSON order).",
-  },
-  {
-    name: "country",
-    type: "VisitedMapCountryCode",
-    description:
-      'Country the place is in (e.g. "ES"). Highlighted with the place\'s variant.',
-  },
-  {
-    name: "variant",
-    type: '"visited" | "lived" | "wishlist" | "current"',
-    description: 'Pin style. Defaults to "visited". "current" pulses.',
-  },
-]
-
-const statsFields: PropRow[] = [
-  {
-    name: "visited",
-    type: "number",
-    description: "Countries visited, counted once each (wishlist excluded).",
-  },
-  {
-    name: "total",
-    type: "number",
-    description:
-      "Always 195: the UN member states plus the Vatican and Palestine.",
-  },
-  {
-    name: "percent",
-    type: "number",
-    description: "visited / total as a percentage, rounded to one decimal.",
-  },
-]
 
 const variants = [
   { variant: "visited", pin: "Sky blue dot", tint: "Light sky" },
@@ -151,7 +51,7 @@ export default function ApiReferencePage() {
       description="Props, types and helpers exported by components/visited-map.tsx."
     >
       <DocsSection title="VisitedMap">
-        <PropsTable rows={props} showDefault />
+        <PropsTable rows={visitedMapProps} showDefault />
         <p className="text-sm text-muted-foreground">
           If a country shows up more than once (in several lists, or through a
           place&apos;s{" "}
