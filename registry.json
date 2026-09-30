@@ -7,7 +7,7 @@
       "name": "visited-map",
       "type": "registry:component",
       "title": "Visited Map",
-      "description": "An SVG world map that shows visited, lived, wishlist and current cities as colored dots. No tiles, no API keys, works in Server Components.",
+      "description": "An SVG world map that highlights the countries you've visited, lived in or want to see, pins cities on top and counts how much of the world you've seen. No tiles or API keys; works in Server Components.",
       "dependencies": ["d3-geo", "topojson-client", "world-atlas"],
       "devDependencies": ["@types/d3-geo", "@types/topojson-client"],
       "registryDependencies": ["utils"],

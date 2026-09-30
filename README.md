@@ -1,11 +1,11 @@
 # Visited Map
 
-An SVG world map for [shadcn/ui](https://ui.shadcn.com) that plots the cities you've been to as colored dots.
+An SVG world map for [shadcn/ui](https://ui.shadcn.com) that highlights the countries you've been to, pins cities on top, and counts how much of the world you've seen.
 
 - **No tiles, no API keys.** Country shapes come from [`world-atlas`](https://github.com/topojson/world-atlas) and are projected with [`d3-geo`](https://github.com/d3/d3-geo). Nothing is fetched at runtime.
 - **Works in Server Components.** No hooks and no `"use client"`, so the map renders as plain SVG on the server and the map data never reaches the browser. It also works in Client Components and outside the App Router.
 - **Follows your theme.** Countries use shadcn tokens (`fill-muted`, `stroke-border`, `bg-card`), so light and dark mode work out of the box.
-- **Tooltips without JavaScript.** City names show on hover, click/tap and keyboard focus, using CSS only.
+- **Tooltips without JavaScript.** Country and city names show on hover, click/tap and keyboard focus, using CSS only.
 
 **[Live demo and docs →](https://shadcn-visited-map.vercel.app)**
 
@@ -39,86 +39,90 @@ npx shadcn@latest add https://shadcn-visited-map.vercel.app/r/visited-map.json
 ## Usage
 
 ```tsx
-import { VisitedMap, type VisitedMapPlace } from "@/components/visited-map"
+import {
+  VisitedMap,
+  type VisitedMapCountries,
+  type VisitedMapPlace,
+} from "@/components/visited-map"
 
-// coords are [lng, lat] — not [lat, lng]
+const countries: VisitedMapCountries = {
+  current: "AR",
+  lived: ["IT"],
+  visited: ["BR", "JP", "US"],
+  wishlist: ["AU"],
+}
+
+// Cities or any other point. coords are [lng, lat], not [lat, lng]
 const places: VisitedMapPlace[] = [
-  {
-    name: "Buenos Aires",
-    coords: [-58.38, -34.6],
-    country: "AR",
-    variant: "current",
-  },
-  { name: "Barcelona", coords: [2.17, 41.39], country: "ES", variant: "lived" },
-  { name: "Tokyo", coords: [139.69, 35.69], country: "JP" },
-  // wishlist countries are not highlighted
-  {
-    name: "Sydney",
-    coords: [151.21, -33.87],
-    country: "AU",
-    variant: "wishlist",
-  },
+  { name: "Barcelona", coords: [2.17, 41.39], country: "ES" },
 ]
 
 export default function Page() {
   return (
-    <VisitedMap
-      places={places}
-      // extra countries you've been to without pinning a city
-      countries={["UY"]}
-      className="max-w-3xl"
-    />
+    <VisitedMap countries={countries} places={places} className="max-w-3xl" />
   )
 }
 ```
 
-> [!IMPORTANT]
-> Coordinates go in **`[longitude, latitude]`** order (the GeoJSON convention). Google Maps copies them as `lat, lng`, so swap the two numbers.
+Each country in `countries` is highlighted with its status color and gets a pin at its center. `places` adds pins anywhere else; a place's `country` is highlighted too. If a country shows up more than once, the strongest status wins: `current` > `lived` > `visited` > `wishlist`. A country's center pin only reflects `countries`, so a `current` city doesn't make its country's pin pulse.
 
-Need coordinates? On the [places page](https://shadcn-visited-map.vercel.app/places) you can mark any of the 195 countries (plus 51 territories such as Curaçao, Puerto Rico or Hong Kong), grouped by continent, as visited, lived, wishlist or current, with a pin at its center, add cities or other places by hand (coordinates as copied from Google Maps), preview the map, and copy the generated `places`. Territories are never counted in the stats.
+> [!IMPORTANT]
+> Place coordinates go in **`[longitude, latitude]`** order (the GeoJSON convention). Google Maps copies them as `lat, lng`, so swap the two numbers.
+
+Rather click than type codes? On the [places page](https://shadcn-visited-map.vercel.app/places) you can mark any of the 195 countries (plus 51 territories such as Curaçao, Puerto Rico or Hong Kong), grouped by continent, add cities by hand (coordinates as copied from Google Maps), preview the map, and copy the generated code.
 
 ## Stats
 
-`getVisitedStats` returns the share of the world's countries you've visited, counting the same countries the map highlights (wishlist excluded):
+`getVisitedStats` takes the same props as the map and returns the share of the world's countries you've visited (wishlist excluded):
 
 ```tsx
 import { getVisitedStats } from "@/components/visited-map"
 
-const { visited, total, percent } = getVisitedStats(places, ["UY"])
-// → { visited: 4, total: 195, percent: 2.1 }
+const { visited, total, percent } = getVisitedStats({ countries, places })
+// → { visited: 6, total: 195, percent: 3.1 }
 ```
 
 The total is 195: the 193 UN member states plus the Vatican and Palestine. Small countries that aren't drawn on the map, like Singapore, still count. Territories such as Greenland or Puerto Rico, Kosovo and Taiwan can be highlighted but aren't counted.
 
 ## Props
 
-| Prop        | Type                      | Description                                                                                                 |
-| ----------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `places`    | `VisitedMapPlace[]`       | Cities to plot on the map.                                                                                  |
-| `countries` | `VisitedMapCountryCode[]` | Extra countries to highlight (ISO 3166-1 alpha-2, e.g. `"UY"`), on top of the ones from `places`. Optional. |
-| `className` | `string`                  | Extra classes for the card container.                                                                       |
+| Prop          | Type                  | Default | Description                                                                                               |
+| ------------- | --------------------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| `countries`   | `VisitedMapCountries` |         | Countries by status (ISO 3166-1 alpha-2 codes). Each is highlighted with its status color and gets a pin. |
+| `places`      | `VisitedMapPlace[]`   |         | Cities or any other point, e.g. Barcelona inside Spain.                                                   |
+| `countryPins` | `boolean`             | `true`  | Show a pin at the center of each country in `countries`.                                                  |
+| `className`   | `string`              |         | Extra classes for the card container.                                                                     |
+
+### `VisitedMapCountries`
+
+| Field      | Type                      | Description                                            |
+| ---------- | ------------------------- | ------------------------------------------------------ |
+| `current`  | `VisitedMapCountryCode`   | Where you are now. Its pin pulses.                     |
+| `lived`    | `VisitedMapCountryCode[]` | Countries you've lived in.                             |
+| `visited`  | `VisitedMapCountryCode[]` | Countries you've been to.                              |
+| `wishlist` | `VisitedMapCountryCode[]` | Countries you want to visit. Not counted in the stats. |
 
 ### `VisitedMapPlace`
 
-| Field     | Type                                              | Description                                                                                                  |
-| --------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `name`    | `string`                                          | Shown in the tooltip.                                                                                        |
-| `coords`  | `[lng, lat]`                                      | Longitude first, then latitude.                                                                              |
-| `country` | `VisitedMapCountryCode`                           | ISO 3166-1 alpha-2 code (e.g. `"AR"`). Highlights the country unless the place is on the wishlist. Optional. |
-| `variant` | `"visited" \| "lived" \| "wishlist" \| "current"` | Dot style. Defaults to `"visited"`.                                                                          |
+| Field     | Type                                              | Description                                                                            |
+| --------- | ------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `name`    | `string`                                          | Shown in the tooltip.                                                                  |
+| `coords`  | `[lng, lat]`                                      | Longitude first, then latitude.                                                        |
+| `country` | `VisitedMapCountryCode`                           | Country the place is in (e.g. `"ES"`). Highlighted with the place's variant. Optional. |
+| `variant` | `"visited" \| "lived" \| "wishlist" \| "current"` | Pin style. Defaults to `"visited"`.                                                    |
 
 ### Variants
 
-| Variant    | Style                                      |
-| ---------- | ------------------------------------------ |
-| `visited`  | Sky blue dot                               |
-| `lived`    | Emerald dot                                |
-| `wishlist` | Hollow amber dot                           |
-| `current`  | Rose dot with a pulsing halo, drawn on top |
+| Variant    | Pin                                        | Country tint  |
+| ---------- | ------------------------------------------ | ------------- |
+| `visited`  | Sky blue dot                               | Light sky     |
+| `lived`    | Emerald dot                                | Light emerald |
+| `wishlist` | Hollow amber dot                           | Light amber   |
+| `current`  | Rose dot with a pulsing halo, drawn on top | Light rose    |
 
-Countries of `visited`, `lived` and `current` places (plus any in `countries`) get a light sky tint; wishlist countries stay plain. The map is drawn at 1:110m, so very small countries (Singapore, Monaco, Malta…) can't be highlighted, although they still count in the stats below. Kosovo uses `"XK"`.
+The map is drawn at 1:110m, so very small countries (Singapore, Monaco, Malta…) aren't highlighted, but they still get a pin and count in the stats. The 51 territories work too (e.g. `"CW"` for Curaçao, `"PR"`, `"HK"`): they get a pin and are highlighted when drawn, but never count in the stats. Kosovo uses `"XK"`.
 
-To change the colors, edit `variantStyles` in `components/visited-map.tsx` after installing. The component is yours to modify.
+To change the colors, edit `pinStyles` and `countryStyles` in `components/visited-map.tsx` after installing. The component is yours to modify.
 
 ## Development
 
@@ -145,4 +149,4 @@ The short install address (`crashncrow/shadcn-visited-map/visited-map`) reads th
 
 ## License
 
-[MIT](LICENSE). Country centers come from [Natural Earth](https://www.naturalearthdata.com) (public domain) and country names from [mledoze/countries](https://github.com/mledoze/countries) ([ODbL](https://opendatacommons.org/licenses/odbl/1-0/)).
+[MIT](LICENSE). The component's country names and centers come from [Natural Earth](https://www.naturalearthdata.com) (public domain). The `/places` page also uses country names and continents from [mledoze/countries](https://github.com/mledoze/countries) ([ODbL](https://opendatacommons.org/licenses/odbl/1-0/)).

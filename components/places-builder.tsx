@@ -19,11 +19,19 @@ import {
   usePlacesBuilder,
   usePlacesSaveFailed,
 } from "@/lib/places-builder"
-import { continents, countries, territories, type Region } from "@/lib/regions"
+import {
+  countries,
+  flattenRegions,
+  territories,
+  type Continent,
+  type Region,
+  type RegionGroups,
+} from "@/lib/regions"
 import { cn } from "@/lib/utils"
 import {
   getVisitedStats,
   VisitedMap,
+  type VisitedMapCountries,
   type VisitedMapCountryCode,
   type VisitedMapPlace,
   type VisitedMapVariant,
@@ -31,18 +39,36 @@ import {
 
 type Tab = "countries" | "territories"
 
-const tabs: { value: Tab; label: string; regions: Region[] }[] = [
-  { value: "countries", label: "Countries", regions: countries },
-  { value: "territories", label: "Territories", regions: territories },
-]
+const byName = (a: Region, b: Region) => a.name.localeCompare(b.name)
 
-// Options for the country of a custom place: anything that can be highlighted.
-// Territories are listed apart because they're highlighted but never counted.
-const countryOptions = [
-  { label: "Countries", regions: countries },
+const tabs: {
+  value: Tab
+  label: string
+  groups: RegionGroups
+  regions: Region[]
+}[] = [
   {
-    label: "Territories (highlighted, not counted)",
-    regions: territories.filter((region) => region.country),
+    value: "countries",
+    label: "Countries",
+    groups: countries,
+    regions: flattenRegions(countries),
+  },
+  {
+    value: "territories",
+    label: "Territories",
+    groups: territories,
+    regions: flattenRegions(territories),
+  },
+]
+const allRegions = tabs.flatMap((item) => item.regions)
+
+// Options for the country of a custom place. Territories are listed apart
+// because they're never counted in the stats.
+const countryOptions = [
+  { label: "Countries", regions: flattenRegions(countries).sort(byName) },
+  {
+    label: "Territories (not counted)",
+    regions: flattenRegions(territories).sort(byName),
   },
 ]
 
@@ -57,18 +83,41 @@ function toPlace(
   }
 }
 
-function regionToPlace(
-  region: Region,
-  variant: VisitedMapVariant,
-): VisitedMapPlace {
-  return toPlace(
-    {
-      name: region.name,
-      coords: countryCenters[region.code],
-      ...(region.country && { country: region.country }),
-    },
-    variant,
-  )
+function toCountries(
+  selected: { region: Region; variant: VisitedMapVariant }[],
+): VisitedMapCountries {
+  const codes = (variant: VisitedMapVariant) =>
+    selected.flatMap(({ region, variant: v }) =>
+      v === variant ? [region.code] : [],
+    )
+  const [current] = codes("current")
+  const lived = codes("lived")
+  const visited = codes("visited")
+  const wishlist = codes("wishlist")
+  return {
+    ...(current && { current }),
+    ...(lived.length > 0 && { lived }),
+    ...(visited.length > 0 && { visited }),
+    ...(wishlist.length > 0 && { wishlist }),
+  }
+}
+
+// ["AR", "BR", …], wrapped so long lists stay readable.
+function formatCodes(codes: string[], indent: string) {
+  const items = codes.map((code) => `"${code}"`)
+  const inline = `[${items.join(", ")}]`
+  if (inline.length <= 60) return inline
+  const lines: string[] = []
+  let line = ""
+  for (const item of items) {
+    if (line && line.length + item.length + 2 > 72) {
+      lines.push(line)
+      line = ""
+    }
+    line += `${item}, `
+  }
+  lines.push(line)
+  return `[\n${lines.map((l) => `${indent}  ${l.trimEnd()}`).join("\n")}\n${indent}]`
 }
 
 function toSnippet(place: VisitedMapPlace) {
@@ -77,13 +126,41 @@ function toSnippet(place: VisitedMapPlace) {
   return `{ name: ${JSON.stringify(place.name)}, coords: [${place.coords.join(", ")}]${country}${variant} },`
 }
 
-function toCode(places: VisitedMapPlace[]) {
-  const lines = places.map((place) => `  ${toSnippet(place)}`).join("\n")
-  return `import type { VisitedMapPlace } from "@/components/visited-map"
+function toCode(countries: VisitedMapCountries, places: VisitedMapPlace[]) {
+  const hasCountries = Object.keys(countries).length > 0
+  const hasPlaces = places.length > 0
+  const types = [
+    hasCountries && "type VisitedMapCountries",
+    hasPlaces && "type VisitedMapPlace",
+  ].filter(Boolean)
+  const blocks = [
+    `import { VisitedMap, ${types.join(", ")} } from "@/components/visited-map"`,
+  ]
 
-const places: VisitedMapPlace[] = [
-${lines}
-]`
+  if (hasCountries) {
+    const lines = [
+      countries.current && `  current: "${countries.current}",`,
+      ...(["lived", "visited", "wishlist"] as const).map(
+        (variant) =>
+          countries[variant] &&
+          `  ${variant}: ${formatCodes(countries[variant], "  ")},`,
+      ),
+    ].filter(Boolean)
+    blocks.push(
+      `const countries: VisitedMapCountries = {\n${lines.join("\n")}\n}`,
+    )
+  }
+  if (hasPlaces) {
+    const lines = places.map((place) => `  ${toSnippet(place)}`).join("\n")
+    blocks.push(`const places: VisitedMapPlace[] = [\n${lines}\n]`)
+  }
+
+  const props = [
+    hasCountries && "countries={countries}",
+    hasPlaces && "places={places}",
+  ].filter(Boolean)
+  blocks.push(`<VisitedMap ${props.join(" ")} />`)
+  return blocks.join("\n\n")
 }
 
 // Case- and accent-insensitive: "curacao" matches "Curaçao".
@@ -261,7 +338,7 @@ function AddPlaceForm() {
             {countryOptions.map((group) => (
               <optgroup key={group.label} label={group.label}>
                 {group.regions.map((region) => (
-                  <option key={region.code} value={region.country}>
+                  <option key={region.code} value={region.code}>
                     {region.name} ({region.code})
                   </option>
                 ))}
@@ -295,16 +372,17 @@ export function PlacesBuilder() {
   const [query, setQuery] = useState("")
   const [selectedOnly, setSelectedOnly] = useState(false)
 
-  const places = [
-    ...[...countries, ...territories]
-      .filter((region) => regions[region.code])
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map((region) => regionToPlace(region, regions[region.code])),
-    ...custom.map(({ name, coords, country, variant }) =>
-      toPlace({ name, coords, ...(country && { country }) }, variant),
-    ),
-  ]
-  const stats = getVisitedStats(places)
+  const selected = allRegions
+    .filter((region) => regions[region.code])
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((region) => ({ region, variant: regions[region.code] }))
+  const mapCountries = toCountries(selected)
+  const places = custom.map(({ name, coords, country, variant }) =>
+    toPlace({ name, coords, ...(country && { country }) }, variant),
+  )
+  const stats = getVisitedStats({ countries: mapCountries, places })
+  const total = selected.length + custom.length
+  const code = total > 0 ? toCode(mapCountries, places) : ""
 
   const q = normalize(query.trim())
   const matches = (region: Region) =>
@@ -312,16 +390,15 @@ export function PlacesBuilder() {
     (!q || normalize(`${region.name} ${region.code}`).includes(q))
   const active = tabs.find((item) => item.value === tab)!
   const other = tabs.find((item) => item.value !== tab)!
-  const rows = active.regions.filter(matches)
-  const groups = continents.flatMap((continent) => {
-    const groupRows = rows.filter((region) => region.continent === continent)
+  const groups = (
+    Object.entries(active.groups) as [Continent, Region[]][]
+  ).flatMap(([continent, all]) => {
+    const groupRows = all.filter(matches)
     if (groupRows.length === 0) return []
-    const all = active.regions.filter(
-      (region) => region.continent === continent,
-    )
     const selected = all.filter((region) => regions[region.code]).length
     return [{ continent, rows: groupRows, total: all.length, selected }]
   })
+  const rows = groups.flatMap((group) => group.rows)
   const otherMatches = q ? other.regions.filter(matches).length : 0
   const selectedCount = active.regions.filter(
     (region) => regions[region.code],
@@ -347,7 +424,7 @@ export function PlacesBuilder() {
             stats={stats}
             className="lg:absolute lg:bottom-4 lg:left-4 lg:z-10 lg:w-52 lg:p-3.5"
           />
-          <VisitedMap places={places} />
+          <VisitedMap countries={mapCountries} places={places} />
         </div>
         <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
           {legend.map((item) => (
@@ -364,16 +441,16 @@ export function PlacesBuilder() {
           <h2 className="text-lg font-semibold tracking-tight">
             Your places{" "}
             <span className="font-normal text-muted-foreground tabular-nums">
-              ({places.length})
+              ({total})
             </span>
           </h2>
-          {places.length > 0 && (
+          {total > 0 && (
             <div className="flex items-center gap-2">
               <Button variant="ghost" onClick={clearPlacesBuilder}>
                 <XIcon />
                 Clear
               </Button>
-              <CopyButton value={toCode(places)} label="Copy places" />
+              <CopyButton value={code} label="Copy code" />
             </div>
           )}
         </div>
@@ -388,14 +465,14 @@ export function PlacesBuilder() {
             closing the page.
           </p>
         )}
-        {places.length > 0 ? (
+        {total > 0 ? (
           <pre className="max-h-80 overflow-auto rounded-lg border bg-muted/50 p-4 font-mono text-sm leading-relaxed">
-            <code>{toCode(places)}</code>
+            <code>{code}</code>
           </pre>
         ) : (
           <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
             Pick a status for a country below or add your own place to generate
-            your <code className="font-mono text-foreground">places</code>.
+            the code for your map.
           </p>
         )}
       </section>

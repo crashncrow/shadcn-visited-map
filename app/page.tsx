@@ -4,54 +4,85 @@ import { CodeBlock } from "@/components/code-block"
 import { InstallTabs } from "@/components/install-tabs"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { VisitedStatsCard } from "@/components/visited-stats-card"
-import { demoPlaces } from "@/lib/demo-places"
+import { demoCountries, demoPlaces } from "@/lib/demo-places"
 import { legend } from "@/lib/legend"
 import { getVisitedStats, VisitedMap } from "@/registry/visited-map/visited-map"
 
-const usageImport = `import { VisitedMap, type VisitedMapPlace } from "@/components/visited-map"`
+const usageImport = `import {
+  VisitedMap,
+  type VisitedMapCountries,
+  type VisitedMapPlace,
+} from "@/components/visited-map"`
 
-const usageExample = `// coords are [lng, lat] — not [lat, lng]
+const usageExample = `const countries: VisitedMapCountries = {
+  current: "AR",
+  lived: ["IT"],
+  visited: ["BR", "JP", "US"],
+  wishlist: ["AU"],
+}
+
+// Cities or any other point. coords are [lng, lat], not [lat, lng]
 const places: VisitedMapPlace[] = [
-  { name: "Buenos Aires", coords: [-58.38, -34.6], country: "AR", variant: "current" },
-  { name: "Barcelona", coords: [2.17, 41.39], country: "ES", variant: "lived" },
-  { name: "Tokyo", coords: [139.69, 35.69], country: "JP" },
-  // wishlist countries are not highlighted
-  { name: "Sydney", coords: [151.21, -33.87], country: "AU", variant: "wishlist" },
+  { name: "Barcelona", coords: [2.17, 41.39], country: "ES" },
 ]
 
-<VisitedMap
-  places={places}
-  // extra countries you've been to without pinning a city
-  countries={["UY"]}
-  className="max-w-3xl"
-/>`
+<VisitedMap countries={countries} places={places} className="max-w-3xl" />`
 
 const usageStats = `import { getVisitedStats } from "@/components/visited-map"
 
-const { visited, total, percent } = getVisitedStats(places, ["UY"])
-// → { visited: 4, total: 195, percent: 2.1 }`
+const { visited, total, percent } = getVisitedStats({ countries, places })
+// → { visited: 6, total: 195, percent: 3.1 }`
 
-const stats = getVisitedStats(demoPlaces)
+const stats = getVisitedStats({ countries: demoCountries, places: demoPlaces })
 
 const props = [
+  {
+    name: "countries",
+    type: "VisitedMapCountries",
+    default: "—",
+    description:
+      "Countries by status (ISO 3166-1 alpha-2 codes). Each is highlighted with its status color and gets a pin at its center.",
+  },
   {
     name: "places",
     type: "VisitedMapPlace[]",
     default: "—",
-    description: "Cities to plot on the map.",
+    description: "Cities or any other point, e.g. Barcelona inside Spain.",
   },
   {
-    name: "countries",
-    type: "VisitedMapCountryCode[]",
-    default: "—",
-    description:
-      'Extra countries to highlight (ISO 3166-1 alpha-2, e.g. "UY"), on top of the ones from places. Very small countries aren\'t drawn at this resolution.',
+    name: "countryPins",
+    type: "boolean",
+    default: "true",
+    description: "Show a pin at the center of each country in countries.",
   },
   {
     name: "className",
     type: "string",
     default: "—",
     description: "Extra classes for the card container.",
+  },
+]
+
+const countriesFields = [
+  {
+    name: "current",
+    type: "VisitedMapCountryCode",
+    description: "Where you are now. Its pin pulses.",
+  },
+  {
+    name: "lived",
+    type: "VisitedMapCountryCode[]",
+    description: "Countries you've lived in.",
+  },
+  {
+    name: "visited",
+    type: "VisitedMapCountryCode[]",
+    description: "Countries you've been to.",
+  },
+  {
+    name: "wishlist",
+    type: "VisitedMapCountryCode[]",
+    description: "Countries you want to visit. Not counted in the stats.",
   },
 ]
 
@@ -70,7 +101,7 @@ const placeFields = [
     name: "country",
     type: "VisitedMapCountryCode",
     description:
-      'ISO 3166-1 alpha-2 code (e.g. "AR"). Highlights the country unless the place is on the wishlist.',
+      'Country the place is in (e.g. "ES"). Highlighted with the place\'s variant.',
   },
   {
     name: "variant",
@@ -150,7 +181,7 @@ export default function Home() {
             stats={stats}
             className="lg:absolute lg:bottom-4 lg:left-4 lg:z-10 lg:w-52 lg:p-3.5"
           />
-          <VisitedMap places={demoPlaces} />
+          <VisitedMap countries={demoCountries} places={demoPlaces} />
         </div>
         <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
           {legend.map((item) => (
@@ -170,32 +201,34 @@ export default function Home() {
         <CodeBlock code={usageImport} />
         <CodeBlock code={usageExample} />
         <p className="text-sm text-muted-foreground">
-          Need coordinates?{" "}
+          If a country shows up more than once, the strongest status wins:
+          current, then lived, visited and wishlist.{" "}
           <Link
             href="/places"
             className="font-medium text-foreground underline underline-offset-4"
           >
-            Mark the countries you&apos;ve been to or add your own places
+            Build your countries and places
           </Link>{" "}
-          and copy the generated{" "}
-          <code className="font-mono text-foreground">places</code>.
+          by clicking instead of typing codes.
         </p>
       </Section>
 
       <Section title="Stats">
         <p className="text-sm text-muted-foreground">
           <code className="font-mono text-foreground">getVisitedStats</code>{" "}
-          counts the same countries the map highlights (wishlist excluded) out
-          of 195: the UN member states plus the Vatican and Palestine. Small
-          countries that aren&apos;t drawn, like Singapore, still count.
-          Territories such as Greenland or Puerto Rico are highlighted but not
-          counted.
+          takes the same props as the map and counts the highlighted countries
+          (wishlist excluded) out of 195: the UN member states plus the Vatican
+          and Palestine. Small countries that aren&apos;t drawn, like Singapore,
+          still count. Territories such as Greenland or Puerto Rico are
+          highlighted but not counted.
         </p>
         <CodeBlock code={usageStats} />
       </Section>
 
       <Section title="Props">
         <PropsTable rows={props} showDefault />
+        <h3 className="mt-2 font-medium">VisitedMapCountries</h3>
+        <PropsTable rows={countriesFields} />
         <h3 className="mt-2 font-medium">VisitedMapPlace</h3>
         <PropsTable rows={placeFields} />
       </Section>

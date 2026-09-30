@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react"
 
-import { countries, territories } from "@/lib/regions"
+import { countries, flattenRegions, territories } from "@/lib/regions"
 import type {
   VisitedMapCountryCode,
   VisitedMapVariant,
@@ -26,11 +26,8 @@ const EMPTY: PlacesBuilderState = { regions: {}, custom: [] }
 
 const variants = new Set<string>(["visited", "lived", "wishlist", "current"])
 const regionCodes = new Set<string>(
-  [...countries, ...territories].map((region) => region.code),
-)
-const countryCodes = new Set<string>(
-  [...countries, ...territories].flatMap((region) =>
-    region.country ? [region.country] : [],
+  [...flattenRegions(countries), ...flattenRegions(territories)].map(
+    (region) => region.code,
   ),
 )
 
@@ -87,7 +84,7 @@ function sanitizeCustom(value: unknown): CustomPlace[] {
         name,
         coords: [coords[0], coords[1]] as [number, number],
         ...(typeof country === "string" &&
-          countryCodes.has(country) && {
+          regionCodes.has(country) && {
             country: country as VisitedMapCountryCode,
           }),
         variant,

@@ -4,7 +4,7 @@ import { ArrowLeftIcon } from "lucide-react"
 
 import { PlacesBuilder } from "@/components/places-builder"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { countries, territories } from "@/lib/regions"
+import { countries, flattenRegions, territories } from "@/lib/regions"
 
 export const metadata: Metadata = {
   title: "Places — Visited Map",
@@ -26,11 +26,13 @@ export default function PlacesPage() {
           </Link>
           <h1 className="text-3xl font-semibold tracking-tight">Places</h1>
           <p className="max-w-xl text-muted-foreground">
-            Mark the {countries.length} countries and {territories.length}{" "}
-            territories as visited, lived, wishlist or current (each gets a pin
-            at its center), add cities or any other place by hand, then copy the
-            generated <code className="font-mono text-foreground">places</code>{" "}
-            into your project. Everything is saved in this browser.
+            Mark the {flattenRegions(countries).length} countries and{" "}
+            {flattenRegions(territories).length} territories as visited, lived,
+            wishlist or current (each gets a pin at its center), add cities or
+            any other place by hand, then copy the generated{" "}
+            <code className="font-mono text-foreground">countries</code> and{" "}
+            <code className="font-mono text-foreground">places</code> into your
+            project. Everything is saved in this browser.
           </p>
         </div>
         <ThemeToggle />
