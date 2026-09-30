@@ -94,6 +94,27 @@ function normalize(text: string) {
     .toLowerCase()
 }
 
+function CountPill({
+  active,
+  children,
+}: {
+  active: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs tabular-nums",
+        active
+          ? "bg-background text-foreground"
+          : "bg-muted text-muted-foreground",
+      )}
+    >
+      {children}
+    </span>
+  )
+}
+
 function StatusButtons({
   label,
   value,
@@ -302,6 +323,21 @@ export function PlacesBuilder() {
     return [{ continent, rows: groupRows, total: all.length, selected }]
   })
   const otherMatches = q ? other.regions.filter(matches).length : 0
+  const selectedCount = active.regions.filter(
+    (region) => regions[region.code],
+  ).length
+  const otherSelectedCount = other.regions.filter(
+    (region) => regions[region.code],
+  ).length
+  const switchTabLink = (count: number) => (
+    <button
+      type="button"
+      onClick={() => setTab(other.value)}
+      className="font-medium text-foreground underline underline-offset-4"
+    >
+      {count} in {other.label.toLowerCase()}
+    </button>
+  )
 
   return (
     <div className="flex flex-col gap-10">
@@ -442,14 +478,14 @@ export function PlacesBuilder() {
               aria-selected={tab === item.value}
               onClick={() => setTab(item.value)}
               className={cn(
-                "rounded-md px-3 py-1 text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+                "inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
                 tab === item.value && "bg-muted text-foreground",
               )}
             >
-              {item.label}{" "}
-              <span className="tabular-nums opacity-60">
+              {item.label}
+              <CountPill active={tab === item.value}>
                 {item.regions.length}
-              </span>
+              </CountPill>
             </button>
           ))}
         </div>
@@ -473,14 +509,35 @@ export function PlacesBuilder() {
               className="pl-8"
             />
           </div>
-          <Button
-            variant="outline"
-            aria-pressed={selectedOnly}
-            onClick={() => setSelectedOnly((value) => !value)}
-            className={cn(selectedOnly && "bg-muted")}
+          <div
+            role="radiogroup"
+            aria-label="Show"
+            className="inline-flex w-fit shrink-0 rounded-lg border p-0.5 text-sm"
           >
-            Selected only
-          </Button>
+            {[
+              { value: false, label: "All" },
+              { value: true, label: "Selected", count: selectedCount },
+            ].map((option) => (
+              <button
+                key={option.label}
+                type="button"
+                role="radio"
+                aria-checked={selectedOnly === option.value}
+                onClick={() => setSelectedOnly(option.value)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+                  selectedOnly === option.value && "bg-muted text-foreground",
+                )}
+              >
+                {option.label}
+                {option.count !== undefined && (
+                  <CountPill active={selectedOnly === option.value}>
+                    {option.count}
+                  </CountPill>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="overflow-x-auto rounded-lg border">
@@ -548,21 +605,17 @@ export function PlacesBuilder() {
                     className="px-4 py-6 text-center text-muted-foreground"
                   >
                     {selectedOnly && !q ? (
-                      "Nothing selected yet."
+                      <>
+                        Nothing selected in {active.label.toLowerCase()} yet.
+                        {otherSelectedCount > 0 && (
+                          <> {switchTabLink(otherSelectedCount)}</>
+                        )}
+                      </>
                     ) : (
                       <>
                         No {active.label.toLowerCase()} match “{query}”.
                         {otherMatches > 0 && (
-                          <>
-                            {" "}
-                            <button
-                              type="button"
-                              onClick={() => setTab(other.value)}
-                              className="font-medium text-foreground underline underline-offset-4"
-                            >
-                              {otherMatches} in {other.label.toLowerCase()}
-                            </button>
-                          </>
+                          <> {switchTabLink(otherMatches)}</>
                         )}
                       </>
                     )}
