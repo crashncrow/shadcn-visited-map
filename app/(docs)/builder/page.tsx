@@ -4,7 +4,7 @@ import { PlacesBuilder } from "@/components/places-builder"
 import { countries, flattenRegions, territories } from "@/lib/regions"
 
 export const metadata: Metadata = {
-  title: "Places Builder",
+  title: "Map Builder",
   description:
     "Mark the countries and territories you've been to, add your own places, and generate the places for Visited Map.",
 }
@@ -14,9 +14,9 @@ export default function PlacesPage() {
     <div className="docs-center flex flex-col gap-8">
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">
-          Places Builder
+          Map Builder
         </h1>
-        <p className="max-w-xl text-muted-foreground">
+        <p className="text-muted-foreground">
           Mark the {flattenRegions(countries).length} countries and{" "}
           {flattenRegions(territories).length} territories as visited, lived,
           wishlist or current (each gets a pin at its center), add cities or any

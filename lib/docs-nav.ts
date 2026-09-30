@@ -31,7 +31,7 @@ export const docsNav: NavGroup[] = [
   },
   {
     title: "Tools",
-    items: [{ title: "Places Builder", href: "/builder" }],
+    items: [{ title: "Map Builder", href: "/builder" }],
   },
 ]
 

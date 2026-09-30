@@ -4,8 +4,10 @@ import { PlusIcon, SearchIcon, TriangleAlertIcon, XIcon } from "lucide-react"
 import { useId, useRef, useState } from "react"
 
 import { CopyButton } from "@/components/copy-button"
+import { LiveCodeBlock } from "@/components/live-code-block"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { countryCenters } from "@/lib/country-centers"
 import { parseCoordinates } from "@/lib/parse-coordinates"
 import {
@@ -419,55 +421,61 @@ export function PlacesBuilder() {
 
   return (
     <div className="flex flex-col gap-10">
-      <section className="flex flex-col gap-3">
-        {/* "all": the legend also explains the status buttons in the table. */}
-        <VisitedMap
-          countries={mapCountries}
-          places={places}
-          showStats
-          showLegend="all"
-        />
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
-            Your places
-            <CountPill className="font-medium tracking-normal">
-              {total}
-            </CountPill>
-          </h2>
-          {total > 0 && (
+      <section aria-label="Your map">
+        <Tabs defaultValue="preview" className="gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <TabsList>
+              <TabsTrigger value="preview">Preview</TabsTrigger>
+              <TabsTrigger value="code">Code</TabsTrigger>
+            </TabsList>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={clearPlacesBuilder}>
-                <XIcon />
-                Clear
-              </Button>
-              <CopyButton value={code} label="Copy code" />
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <CountPill>{total}</CountPill>
+                {total === 1 ? "place" : "places"}
+              </span>
+              {total > 0 && (
+                <>
+                  <Button variant="ghost" onClick={clearPlacesBuilder}>
+                    <XIcon />
+                    Clear
+                  </Button>
+                  <CopyButton value={code} label="Copy code" />
+                </>
+              )}
             </div>
+          </div>
+          {saveFailed && (
+            <p
+              role="alert"
+              className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              <TriangleAlertIcon className="mt-0.5 size-4 shrink-0" />
+              This browser isn&apos;t letting the page save (storage is blocked
+              or full), so your places will be lost when you leave. Copy them
+              before closing the page.
+            </p>
           )}
-        </div>
-        {saveFailed && (
-          <p
-            role="alert"
-            className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
-          >
-            <TriangleAlertIcon className="mt-0.5 size-4 shrink-0" />
-            This browser isn&apos;t letting the page save (storage is blocked or
-            full), so your places will be lost when you leave. Copy them before
-            closing the page.
-          </p>
-        )}
-        {total > 0 ? (
-          <pre className="max-h-80 overflow-auto rounded-lg border bg-muted/50 p-4 font-mono text-sm leading-relaxed">
-            <code>{code}</code>
-          </pre>
-        ) : (
-          <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-            Pick a status for a country below or add your own place to generate
-            the code for your map.
-          </p>
-        )}
+          <TabsContent value="preview">
+            {/* "all": the legend also explains the status buttons in the table. */}
+            <VisitedMap
+              countries={mapCountries}
+              places={places}
+              showStats
+              showLegend="all"
+            />
+          </TabsContent>
+          <TabsContent value="code">
+            {total > 0 ? (
+              // "Copy code" is already in the header, for both tabs.
+              <LiveCodeBlock code={code} showCopy={false} />
+            ) : (
+              <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+                Pick a status for a country below or add your own place to
+                generate the code for your map.
+              </p>
+            )}
+          </TabsContent>
+        </Tabs>
       </section>
 
       <section className="flex flex-col gap-4">
