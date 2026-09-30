@@ -39,18 +39,22 @@ export function CommandMenu() {
   return (
     <>
       <Button
-        variant="outline"
+        variant="ghost"
+        size="icon"
         onClick={() => setOpen(true)}
-        className="h-8 w-8 justify-center bg-muted/50 px-0 text-muted-foreground sm:w-56 sm:justify-start sm:px-2.5 dark:bg-input/30"
+        className="size-8 md:hidden"
         aria-label="Search documentation"
       >
-        <SearchIcon className="sm:hidden" />
-        <span className="hidden flex-1 text-left font-normal sm:inline">
-          Search documentation…
-        </span>
-        <kbd className="pointer-events-none hidden h-5 items-center gap-0.5 rounded border bg-background px-1.5 font-mono text-[0.7rem] font-medium sm:inline-flex">
-          <span className="text-xs">⌘</span>K
-        </kbd>
+        <SearchIcon />
+      </Button>
+      {/* Mirrors the trigger in apps/v4/components/command-menu.tsx. */}
+      <Button
+        variant="outline"
+        onClick={() => setOpen(true)}
+        className="relative hidden h-8 w-full justify-start rounded-lg border-none bg-muted pl-3 font-normal text-foreground shadow-none transition-colors hover:bg-muted/50 md:flex md:w-48 lg:w-40 xl:w-64 dark:bg-card"
+      >
+        <span className="hidden xl:inline-flex">Search documentation...</span>
+        <span className="inline-flex xl:hidden">Search...</span>
       </Button>
       <CommandDialog
         open={open}

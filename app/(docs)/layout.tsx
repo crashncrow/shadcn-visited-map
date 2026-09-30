@@ -12,7 +12,14 @@ export default function DocsLayout({
   children: React.ReactNode
 }) {
   return (
-    <SidebarProvider className="min-h-0 items-start">
+    <SidebarProvider
+      className="min-h-0 items-start"
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+        } as React.CSSProperties
+      }
+    >
       <DocsSidebar />
       <main className="min-w-0 flex-1 px-4 pt-8 [--content-width:48rem] md:px-10 md:pt-10">
         {children}

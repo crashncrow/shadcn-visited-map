@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { Button } from "@/components/ui/button"
 import { mainNav } from "@/lib/docs-nav"
 import { cn } from "@/lib/utils"
 
@@ -15,25 +16,33 @@ export function isNavItemActive(href: string, pathname: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
+// Mirrors apps/v4/components/main-nav.tsx from shadcn-ui/ui.
 export function MainNav({ className }: { className?: string }) {
   const pathname = usePathname()
 
   return (
-    <nav className={cn("items-center gap-1", className)}>
+    <nav className={cn("items-center gap-0", className)}>
       {mainNav.map((item) => {
         const active = isNavItemActive(item.href, pathname)
         return (
-          <Link
+          <Button
             key={item.href}
-            href={item.href}
-            aria-current={active ? "page" : undefined}
+            variant="ghost"
+            size="sm"
             className={cn(
-              "rounded-md px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+              "px-2.5 text-muted-foreground",
               active && "text-foreground",
             )}
+            render={
+              <Link
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+              />
+            }
+            nativeButton={false}
           >
             {item.title}
-          </Link>
+          </Button>
         )
       })}
     </nav>

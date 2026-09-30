@@ -1,4 +1,5 @@
 import { GitHubIcon } from "@/components/github-icon"
+import { Button } from "@/components/ui/button"
 import { repoUrl } from "@/lib/docs-nav"
 
 async function getStars() {
@@ -26,21 +27,30 @@ export async function GitHubLink() {
   const stars = await getStars()
 
   return (
-    <a
-      href={repoUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={
-        stars === null
-          ? "GitHub repository"
-          : `GitHub repository, ${stars} stars`
+    <Button
+      size="sm"
+      variant="ghost"
+      className="h-8 shadow-none"
+      render={
+        <a
+          href={repoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={
+            stars === null
+              ? "GitHub repository"
+              : `GitHub repository, ${stars} stars`
+          }
+        />
       }
-      className="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      nativeButton={false}
     >
-      <GitHubIcon className="size-4" />
+      <GitHubIcon />
       {stars !== null && (
-        <span className="text-xs tabular-nums">{formatStars(stars)}</span>
+        <span className="w-fit text-xs text-muted-foreground tabular-nums">
+          {formatStars(stars)}
+        </span>
       )}
-    </a>
+    </Button>
   )
 }
