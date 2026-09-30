@@ -152,3 +152,25 @@
   opacity: 0.6;
   user-select: none;
 }
+
+/*
+ * Content next to the docs sidebar: centered on the whole window (like pages
+ * without a sidebar) when there's room, otherwise it starts right after the
+ * sidebar. Uses --content-width from the docs layout. 2.5rem is the main's
+ * md:px-10.
+ */
+@utility docs-center {
+  width: 100%;
+  max-width: var(--content-width);
+  margin-inline: auto;
+
+  @media (width >= 48rem) {
+    margin-left: max(
+      0px,
+      calc(
+        (100vw - var(--content-width)) / 2 - var(--sidebar-width) - 2.5rem
+      )
+    );
+    margin-right: 0;
+  }
+}

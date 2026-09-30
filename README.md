@@ -7,7 +7,7 @@ An SVG world map for [shadcn/ui](https://ui.shadcn.com) that highlights the coun
 - **Follows your theme.** Countries use shadcn tokens (`fill-muted`, `stroke-border`, `bg-card`), so light and dark mode work out of the box.
 - **Tooltips without JavaScript.** Country and city names show on hover, click/tap and keyboard focus, using CSS only.
 
-**[Live demo and docs →](https://shadcn-visited-map.vercel.app)**
+**[Live demo](https://shadcn-visited-map.vercel.app) · [Docs](https://shadcn-visited-map.vercel.app/docs) · [Examples](https://shadcn-visited-map.vercel.app/docs/examples)**
 
 ![Visited Map in dark mode](.github/preview.png)
 
@@ -134,14 +134,17 @@ npm run dev             # docs site on http://localhost:3000
 npm run registry:build  # regenerates public/r/*.json from registry.json
 ```
 
-| Path                                   | What it is                                                                |
-| -------------------------------------- | ------------------------------------------------------------------------- |
-| `registry/visited-map/visited-map.tsx` | The component (source of truth).                                          |
-| `registry.json`                        | Registry definition read by `shadcn build`.                               |
-| `public/r/`                            | Built registry JSON served to `shadcn add`. Commit it.                    |
-| `app/page.tsx`                         | Docs and demo page.                                                       |
-| `lib/regions.ts`                       | The 195 countries and 50 territories for the `/places` builder.           |
-| `lib/country-centers.ts`               | Center points of each country and territory (Natural Earth label points). |
+| Path                                   | What it is                                                                                         |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `registry/visited-map/visited-map.tsx` | The component (source of truth).                                                                   |
+| `registry.json`                        | Registry definition read by `shadcn build`.                                                        |
+| `public/r/`                            | Built registry JSON served to `shadcn add`. Commit it.                                             |
+| `app/page.tsx`                         | Landing page with the demo map.                                                                    |
+| `app/(docs)/`                          | Docs (Get Started, API Reference, examples) and the `/places` builder, sharing the sidebar layout. |
+| `lib/examples.ts`                      | Example maps and their code, shown under `/docs/examples`.                                         |
+| `lib/docs-nav.ts`                      | Top bar, sidebar and search navigation.                                                            |
+| `lib/regions.ts`                       | The 195 countries and 50 territories for the `/places` builder.                                    |
+| `lib/country-centers.ts`               | Center points of each country and territory (Natural Earth label points).                          |
 
 After changing the component, run `npm run registry:build` and commit the updated `public/r/` so the deployed registry serves the new version.
 
