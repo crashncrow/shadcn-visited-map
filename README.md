@@ -73,7 +73,7 @@ Rather click than type codes? On the [builder](https://shadcn-visited-map.vercel
 
 ## Stats
 
-Add `showStats` to show it on the map (a card on wide maps, a pill that expands on tap on narrow ones). For your own UI, `getVisitedStats` takes the same props as the map and returns the share of the world's countries you've visited (wishlist excluded):
+The map shows it by default (a card on wide maps, a pill that expands on tap on narrow ones); pass `hideStats` to remove it. For your own UI, `getVisitedStats` takes the same props as the map and returns the share of the world's countries you've visited (wishlist excluded):
 
 ```tsx
 import { getVisitedStats } from "@/components/visited-map"
@@ -86,14 +86,14 @@ The total is 195: the 193 UN member states plus the Vatican and Palestine. Small
 
 ## Props
 
-| Prop          | Type                  | Default | Description                                                                                               |
-| ------------- | --------------------- | ------- | --------------------------------------------------------------------------------------------------------- |
-| `countries`   | `VisitedMapCountries` |         | Countries by status (ISO 3166-1 alpha-2 codes). Each is highlighted with its status color and gets a pin. |
-| `places`      | `VisitedMapPlace[]`   |         | Cities or any other point, e.g. Barcelona inside Spain.                                                   |
-| `countryPins` | `boolean`             | `true`  | Show a pin at the center of each country in `countries`.                                                  |
-| `showStats`   | `boolean`             | `false` | Show how much of the world you've seen: a card on wide maps, a pill that expands on tap on narrow ones.   |
-| `showLegend`  | `boolean \| "all"`    | `false` | Show a legend under the map: `true` lists the statuses in use, `"all"` always lists all four.             |
-| `className`   | `string`              |         | Extra classes for the root element (the map card and its legend).                                         |
+| Prop          | Type                  | Default | Description                                                                                                               |
+| ------------- | --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `countries`   | `VisitedMapCountries` |         | Countries by status (ISO 3166-1 alpha-2 codes). Each is highlighted with its status color and gets a pin.                 |
+| `places`      | `VisitedMapPlace[]`   |         | Cities or any other point, e.g. Barcelona inside Spain.                                                                   |
+| `countryPins` | `boolean`             | `true`  | Show a pin at the center of each country in `countries`.                                                                  |
+| `hideStats`   | `boolean`             | `false` | Hide how much of the world you've seen, shown by default: a card on wide maps, a pill that expands on tap on narrow ones. |
+| `hideLegend`  | `boolean`             | `false` | Hide the legend under the map, which lists the statuses in use.                                                           |
+| `className`   | `string`              |         | Extra classes for the root element (the map card and its legend).                                                         |
 
 ### `VisitedMapCountries`
 

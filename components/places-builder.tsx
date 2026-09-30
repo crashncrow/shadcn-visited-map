@@ -7,6 +7,8 @@ import { CopyButton } from "@/components/copy-button"
 import { LiveCodeBlock } from "@/components/live-code-block"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { countryCenters } from "@/lib/country-centers"
 import { parseCoordinates } from "@/lib/parse-coordinates"
@@ -14,7 +16,9 @@ import {
   addCustomPlace,
   clearPlacesBuilder,
   removeCustomPlace,
+  setBuilderOption,
   setCustomVariant,
+  type BuilderOptions,
   toggleRegion,
   usePlacesBuilder,
   usePlacesSaveFailed,
@@ -127,7 +131,11 @@ function toSnippet(place: VisitedMapPlace) {
   return `{ name: ${JSON.stringify(place.name)}, coords: [${place.coords.join(", ")}]${country}${variant} },`
 }
 
-function toCode(countries: VisitedMapCountries, places: VisitedMapPlace[]) {
+function toCode(
+  countries: VisitedMapCountries,
+  places: VisitedMapPlace[],
+  options: BuilderOptions,
+) {
   const hasCountries = Object.keys(countries).length > 0
   const hasPlaces = places.length > 0
   const types = [
@@ -159,6 +167,8 @@ function toCode(countries: VisitedMapCountries, places: VisitedMapPlace[]) {
   const props = [
     hasCountries && "countries={countries}",
     hasPlaces && "places={places}",
+    options.hideStats && "hideStats",
+    options.hideLegend && "hideLegend",
   ].filter(Boolean)
   blocks.push(`<VisitedMap ${props.join(" ")} />`)
   return blocks.join("\n\n")
@@ -370,7 +380,7 @@ function AddPlaceForm() {
 }
 
 export function PlacesBuilder() {
-  const { regions, custom } = usePlacesBuilder()
+  const { regions, custom, options } = usePlacesBuilder()
   const saveFailed = usePlacesSaveFailed()
   const [tab, setTab] = useState<Tab>("countries")
   const [query, setQuery] = useState("")
@@ -385,7 +395,7 @@ export function PlacesBuilder() {
     toPlace({ name, coords, ...(country && { country }) }, variant),
   )
   const total = selected.length + custom.length
-  const code = total > 0 ? toCode(mapCountries, places) : ""
+  const code = total > 0 ? toCode(mapCountries, places, options) : ""
 
   const q = normalize(query.trim())
   const matches = (region: Region) =>
@@ -458,13 +468,28 @@ export function PlacesBuilder() {
               before closing the page.
             </p>
           )}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            {(
+              [
+                ["hideStats", "Hide stats"],
+                ["hideLegend", "Hide legend"],
+              ] as const
+            ).map(([key, label]) => (
+              <Label key={key} className="font-normal">
+                <Switch
+                  checked={options[key]}
+                  onCheckedChange={(checked) => setBuilderOption(key, checked)}
+                />
+                {label}
+              </Label>
+            ))}
+          </div>
           <TabsContent value="preview">
-            {/* "all": the legend also explains the status buttons in the table. */}
             <VisitedMap
               countries={mapCountries}
               places={places}
-              showStats
-              showLegend="all"
+              hideStats={options.hideStats}
+              hideLegend={options.hideLegend}
             />
           </TabsContent>
           <TabsContent value="code">

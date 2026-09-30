@@ -321,16 +321,13 @@ export type VisitedMapProps = {
   /** Show a pin at the center of each country in `countries`. Defaults to true. */
   countryPins?: boolean
   /**
-   * Show how much of the world you've seen (see `getVisitedStats`) in the
-   * bottom-left corner: a card on wide maps, a pill that expands on tap on
-   * narrow ones. Defaults to false.
+   * Hide how much of the world you've seen (see `getVisitedStats`), shown by
+   * default in the bottom-left corner: a card on wide maps, a pill that
+   * expands on tap on narrow ones.
    */
-  showStats?: boolean
-  /**
-   * Show a legend under the map: `true` lists the statuses in use, `"all"`
-   * always lists all four (e.g. to explain a status picker). Defaults to false.
-   */
-  showLegend?: boolean | "all"
+  hideStats?: boolean
+  /** Hide the legend under the map, which lists the statuses in use. */
+  hideLegend?: boolean
   /** Extra classes for the root element: the map card and its legend. */
   className?: string
 }
@@ -629,8 +626,8 @@ export function VisitedMap({
   countries,
   places = [],
   countryPins = true,
-  showStats = false,
-  showLegend = false,
+  hideStats = false,
+  hideLegend = false,
   className,
 }: VisitedMapProps) {
   const highlighted = resolveCountries(countries, places)
@@ -658,10 +655,9 @@ export function VisitedMap({
     ...highlighted.values(),
     ...points.map((point) => point.variant),
   ])
-  const legendItems =
-    showLegend === "all"
-      ? visitedMapVariants
-      : visitedMapVariants.filter((item) => usedVariants.has(item.variant))
+  const legendItems = visitedMapVariants.filter((item) =>
+    usedVariants.has(item.variant),
+  )
 
   return (
     <div
@@ -730,12 +726,12 @@ export function VisitedMap({
               </li>
             ))}
           </ul>
-          {showStats && (
+          {!hideStats && (
             <StatsOverlay stats={getVisitedStats({ countries, places })} />
           )}
         </div>
       </div>
-      {showLegend && legendItems.length > 0 && (
+      {!hideLegend && legendItems.length > 0 && (
         <ul
           aria-label="Legend"
           className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground"

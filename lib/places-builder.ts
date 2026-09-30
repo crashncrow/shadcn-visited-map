@@ -15,14 +15,26 @@ export type CustomPlace = {
   variant: VisitedMapVariant
 }
 
+/** VisitedMap props the builder can turn on or off. */
+export type BuilderOptions = {
+  hideStats: boolean
+  hideLegend: boolean
+}
+
 export type PlacesBuilderState = {
   /** Variant chosen for each country or territory, keyed by its code. */
   regions: Record<string, VisitedMapVariant>
   custom: CustomPlace[]
+  options: BuilderOptions
 }
 
 const STORAGE_KEY = "places-builder"
-const EMPTY: PlacesBuilderState = { regions: {}, custom: [] }
+const DEFAULT_OPTIONS: BuilderOptions = { hideStats: false, hideLegend: false }
+const EMPTY: PlacesBuilderState = {
+  regions: {},
+  custom: [],
+  options: DEFAULT_OPTIONS,
+}
 
 const variants = new Set<string>(["visited", "lived", "wishlist", "current"])
 const regionCodes = new Set<string>(
@@ -93,6 +105,22 @@ function sanitizeCustom(value: unknown): CustomPlace[] {
   })
 }
 
+function sanitizeOptions(value: unknown): BuilderOptions {
+  const options = (value ?? {}) as Partial<
+    Record<keyof BuilderOptions, unknown>
+  >
+  return {
+    hideStats:
+      typeof options.hideStats === "boolean"
+        ? options.hideStats
+        : DEFAULT_OPTIONS.hideStats,
+    hideLegend:
+      typeof options.hideLegend === "boolean"
+        ? options.hideLegend
+        : DEFAULT_OPTIONS.hideLegend,
+  }
+}
+
 function read(): PlacesBuilderState {
   if (state) return state
   try {
@@ -101,6 +129,7 @@ function read(): PlacesBuilderState {
     state = {
       regions: sanitizeRegions(parsed?.regions),
       custom: sanitizeCustom(parsed?.custom),
+      options: sanitizeOptions(parsed?.options),
     }
   } catch {
     state = EMPTY
@@ -138,6 +167,7 @@ function write(next: PlacesBuilderState) {
 // Only one place can be "current": the previous one becomes "visited".
 function demoteCurrent(current: PlacesBuilderState): PlacesBuilderState {
   return {
+    ...current,
     regions: Object.fromEntries(
       Object.entries(current.regions).map(([code, variant]) => [
         code,
@@ -194,8 +224,14 @@ export function removeCustomPlace(id: string) {
   })
 }
 
+/** Clears the places but keeps the options. */
 export function clearPlacesBuilder() {
-  write({ regions: {}, custom: [] })
+  write({ ...read(), regions: {}, custom: [] })
+}
+
+export function setBuilderOption(key: keyof BuilderOptions, value: boolean) {
+  const current = read()
+  write({ ...current, options: { ...current.options, [key]: value } })
 }
 
 /** True when changes couldn't be saved and will be lost on reload. */

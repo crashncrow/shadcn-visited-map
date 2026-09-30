@@ -75,14 +75,13 @@ export function CitiesMap() {
     slug: "current",
     title: "Current Location",
     description:
-      "Mark where you are now with current. Its pin pulses and is always drawn on top. showLegend lists the statuses in use under the map.",
+      "Mark where you are now with current. Its pin pulses and is always drawn on top.",
     props: {
       countries: {
         current: "AR",
         lived: ["UY"],
         visited: ["CL", "BR", "PE", "CO", "MX"],
       },
-      showLegend: true,
     },
     code: `import { VisitedMap } from "@/components/visited-map"
 
@@ -94,7 +93,6 @@ export function CurrentMap() {
         lived: ["UY"],
         visited: ["CL", "BR", "PE", "CO", "MX"],
       }}
-      showLegend
     />
   )
 }`,
@@ -153,14 +151,13 @@ export function WithoutPinsMap() {
     slug: "stats",
     title: "Stats",
     description:
-      "showStats adds how much of the world you've seen: a card on wide maps, a pill that expands on tap on narrow ones. For your own UI, getVisitedStats returns the numbers.",
+      "The map shows how much of the world you've seen: a card on wide maps, a pill that expands on tap on narrow ones. Hide it with hideStats, or build your own UI with getVisitedStats.",
     props: {
       countries: {
         current: "AR",
         lived: ["ES", "UY"],
         visited: ["CL", "PE", "MX", "US", "GB", "DE", "IT", "MA", "JP", "TH"],
       },
-      showStats: true,
     },
     code: `import { VisitedMap, type VisitedMapCountries } from "@/components/visited-map"
 
@@ -170,12 +167,41 @@ const countries: VisitedMapCountries = {
   visited: ["CL", "PE", "MX", "US", "GB", "DE", "IT", "MA", "JP", "TH"],
 }
 
+// Stats are shown by default; pass hideStats to remove them.
 export function StatsMap() {
-  return <VisitedMap countries={countries} showStats />
+  return <VisitedMap countries={countries} />
 }
 
 // Or build your own UI with the same numbers:
 // const { visited, total, percent } = getVisitedStats({ countries })`,
+  },
+  {
+    slug: "map-only",
+    title: "Map Only",
+    description:
+      "Stats and legend are shown by default. hideStats and hideLegend leave just the map.",
+    props: {
+      countries: {
+        lived: ["ES"],
+        visited: ["AR", "BR", "US", "FR", "IT", "JP"],
+      },
+      hideStats: true,
+      hideLegend: true,
+    },
+    code: `import { VisitedMap } from "@/components/visited-map"
+
+export function MapOnly() {
+  return (
+    <VisitedMap
+      countries={{
+        lived: ["ES"],
+        visited: ["AR", "BR", "US", "FR", "IT", "JP"],
+      }}
+      hideStats
+      hideLegend
+    />
+  )
+}`,
   },
   {
     slug: "territories",

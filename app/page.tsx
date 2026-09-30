@@ -33,12 +33,7 @@ export default function Home() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <VisitedMap
-            countries={demoCountries}
-            places={demoPlaces}
-            showStats
-            showLegend
-          />
+          <VisitedMap countries={demoCountries} places={demoPlaces} />
         </section>
       </main>
       <SiteFooter />

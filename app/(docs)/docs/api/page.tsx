@@ -28,18 +28,18 @@ const props: PropRow[] = [
     description: "Show a pin at the center of each country in countries.",
   },
   {
-    name: "showStats",
+    name: "hideStats",
     type: "boolean",
     default: "false",
     description:
-      "Show how much of the world you've seen in the bottom-left corner: a card on wide maps, a pill that expands on tap on narrow ones.",
+      "Hide how much of the world you've seen, shown by default in the bottom-left corner: a card on wide maps, a pill that expands on tap on narrow ones.",
   },
   {
-    name: "showLegend",
-    type: 'boolean | "all"',
+    name: "hideLegend",
+    type: "boolean",
     default: "false",
     description:
-      'Show a legend under the map. true lists the statuses in use; "all" always lists all four, e.g. to explain a status picker.',
+      "Hide the legend under the map, which lists the statuses in use.",
   },
   {
     name: "className",
