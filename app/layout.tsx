@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s — Visited Map",
   },
   description:
-    "An SVG world map for shadcn/ui that highlights the countries you've visited, pins cities and counts how much of the world you've seen.",
+    "Free & open-source, ready-to-use world map for shadcn/ui that shows how much of the world you've seen.",
   metadataBase: new URL(siteUrl),
   applicationName: "Visited Map",
   authors: [{ name: "@_nnaro_", url: "https://x.com/_nnaro_" }],
