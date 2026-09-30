@@ -19,6 +19,7 @@ export type CustomPlace = {
 export type BuilderOptions = {
   hideStats: boolean
   hideLegend: boolean
+  zoomable: boolean
 }
 
 export type PlacesBuilderState = {
@@ -29,7 +30,11 @@ export type PlacesBuilderState = {
 }
 
 const STORAGE_KEY = "places-builder"
-const DEFAULT_OPTIONS: BuilderOptions = { hideStats: false, hideLegend: false }
+const DEFAULT_OPTIONS: BuilderOptions = {
+  hideStats: false,
+  hideLegend: false,
+  zoomable: false,
+}
 const EMPTY: PlacesBuilderState = {
   regions: {},
   custom: [],
@@ -109,16 +114,12 @@ function sanitizeOptions(value: unknown): BuilderOptions {
   const options = (value ?? {}) as Partial<
     Record<keyof BuilderOptions, unknown>
   >
-  return {
-    hideStats:
-      typeof options.hideStats === "boolean"
-        ? options.hideStats
-        : DEFAULT_OPTIONS.hideStats,
-    hideLegend:
-      typeof options.hideLegend === "boolean"
-        ? options.hideLegend
-        : DEFAULT_OPTIONS.hideLegend,
+  const result = { ...DEFAULT_OPTIONS }
+  for (const key of Object.keys(DEFAULT_OPTIONS) as (keyof BuilderOptions)[]) {
+    const option = options[key]
+    if (typeof option === "boolean") result[key] = option
   }
+  return result
 }
 
 function read(): PlacesBuilderState {

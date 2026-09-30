@@ -169,6 +169,7 @@ function toCode(
     hasPlaces && "places={places}",
     options.hideStats && "hideStats",
     options.hideLegend && "hideLegend",
+    options.zoomable && "zoomable",
   ].filter(Boolean)
   blocks.push(`<VisitedMap ${props.join(" ")} />`)
   return blocks.join("\n\n")
@@ -473,6 +474,7 @@ export function PlacesBuilder() {
               [
                 ["hideStats", "Hide stats"],
                 ["hideLegend", "Hide legend"],
+                ["zoomable", "Zoomable"],
               ] as const
             ).map(([key, label]) => (
               <Label key={key} className="font-normal">
@@ -490,6 +492,7 @@ export function PlacesBuilder() {
               places={places}
               hideStats={options.hideStats}
               hideLegend={options.hideLegend}
+              zoomable={options.zoomable}
             />
           </TabsContent>
           <TabsContent value="code">

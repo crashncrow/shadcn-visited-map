@@ -204,6 +204,90 @@ export function MapOnly() {
 }`,
   },
   {
+    slug: "zoom",
+    title: "Zoom",
+    description:
+      "Add zoomable to zoom and pan: the buttons in the corner, ⌘/Ctrl + scroll or a trackpad pinch, pinch on touch screens, and drag or double-click once zoomed in. Pins and tooltips keep their size.",
+    props: {
+      countries: {
+        current: "IT",
+        lived: ["ES"],
+        visited: ["PT", "FR", "CH", "AT", "NL", "BE", "GR", "HR", "SG", "MT"],
+      },
+      places: [
+        { name: "Lisbon", coords: [-9.14, 38.72], country: "PT" },
+        { name: "Amsterdam", coords: [4.9, 52.37], country: "NL" },
+        { name: "Vienna", coords: [16.37, 48.21], country: "AT" },
+        { name: "Dubrovnik", coords: [18.09, 42.65], country: "HR" },
+      ],
+      zoomable: true,
+    },
+    code: `import { VisitedMap, type VisitedMapPlace } from "@/components/visited-map"
+
+const places: VisitedMapPlace[] = [
+  { name: "Lisbon", coords: [-9.14, 38.72], country: "PT" },
+  { name: "Amsterdam", coords: [4.9, 52.37], country: "NL" },
+  { name: "Vienna", coords: [16.37, 48.21], country: "AT" },
+  { name: "Dubrovnik", coords: [18.09, 42.65], country: "HR" },
+]
+
+export function ZoomableMap() {
+  return (
+    <VisitedMap
+      countries={{
+        current: "IT",
+        lived: ["ES"],
+        visited: ["PT", "FR", "CH", "AT", "NL", "BE", "GR", "HR", "SG", "MT"],
+      }}
+      places={places}
+      zoomable
+    />
+  )
+}`,
+  },
+  {
+    slug: "focus",
+    title: "Focus on a Country",
+    description:
+      "Pass a country code to focus to start zoomed in on it. With zoomable, people can zoom out from there and reset brings them back; without it, the map stays cropped and ships no JavaScript.",
+    props: {
+      countries: {
+        current: "US",
+        visited: ["CA", "MX", "CU"],
+      },
+      places: [
+        { name: "New York", coords: [-74.01, 40.71], country: "US" },
+        { name: "Chicago", coords: [-87.63, 41.88], country: "US" },
+        { name: "New Orleans", coords: [-90.07, 29.95], country: "US" },
+        { name: "San Francisco", coords: [-122.42, 37.77], country: "US" },
+      ],
+      focus: "US",
+      zoomable: true,
+    },
+    code: `import { VisitedMap, type VisitedMapPlace } from "@/components/visited-map"
+
+const places: VisitedMapPlace[] = [
+  { name: "New York", coords: [-74.01, 40.71], country: "US" },
+  { name: "Chicago", coords: [-87.63, 41.88], country: "US" },
+  { name: "New Orleans", coords: [-90.07, 29.95], country: "US" },
+  { name: "San Francisco", coords: [-122.42, 37.77], country: "US" },
+]
+
+export function FocusMap() {
+  return (
+    <VisitedMap
+      countries={{
+        current: "US",
+        visited: ["CA", "MX", "CU"],
+      }}
+      places={places}
+      focus="US"
+      zoomable
+    />
+  )
+}`,
+  },
+  {
     slug: "territories",
     title: "Territories & Small Countries",
     description:

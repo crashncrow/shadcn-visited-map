@@ -1,12 +1,16 @@
-import { geoMercator, geoPath } from "d3-geo"
+import { geoArea, geoMercator, geoPath } from "d3-geo"
 import { feature } from "topojson-client"
 import worldAtlas from "world-atlas/countries-110m.json"
 
 import { cn } from "@/lib/utils"
 
+import { VisitedMapZoom, type VisitedMapView } from "./visited-map-zoom"
+
 // This component is intentionally isomorphic: no "use client", no hooks and
 // no server-only APIs. Rendered from a Server Component, the map is plain SVG
-// markup and the TopoJSON never reaches the client bundle.
+// markup and the TopoJSON never reaches the client bundle. Only `zoomable`
+// adds a client component (visited-map-zoom.tsx), which moves the
+// server-rendered map without ever seeing the geometry.
 
 export type VisitedMapVariant = "visited" | "lived" | "wishlist" | "current"
 
@@ -328,6 +332,18 @@ export type VisitedMapProps = {
   hideStats?: boolean
   /** Hide the legend under the map, which lists the statuses in use. */
   hideLegend?: boolean
+  /**
+   * Let people zoom and pan the map: buttons, ⌘/Ctrl + scroll, pinch and
+   * drag. Adds a small client component; without it the map ships no
+   * JavaScript.
+   */
+  zoomable?: boolean
+  /**
+   * Start zoomed in on a country, e.g. `"AR"`. Frames its main landmass
+   * (France without French Guiana, the US without Alaska). With `zoomable`,
+   * people can zoom out from there; without it, the map stays cropped.
+   */
+  focus?: VisitedMapCountryCode
   /** Extra classes for the root element: the map card and its legend. */
   className?: string
 }
@@ -367,15 +383,17 @@ const world = {
 const projection = geoMercator().fitSize([WIDTH, HEIGHT], world)
 const path = geoPath(projection)
 
+type CountryFeature = (typeof world.features)[number]
+
+// Kosovo has no ISO numeric id in world-atlas; "XK" is its common code.
+function codeOf(country: CountryFeature) {
+  if (country.id !== undefined) return codeById.get(String(country.id))
+  return country.properties?.name === "Kosovo" ? "XK" : undefined
+}
+
 const countryPaths = world.features.map((country, index) => ({
   key: country.id ?? index,
-  // Kosovo has no ISO numeric id in world-atlas; "XK" is its common code.
-  code:
-    country.id !== undefined
-      ? codeById.get(String(country.id))
-      : country.properties?.name === "Kosovo"
-        ? "XK"
-        : undefined,
+  code: codeOf(country),
   d: path(country) ?? "",
 }))
 
@@ -386,6 +404,73 @@ const viewBoxY = Math.floor(y0 - PADDING)
 const viewBoxWidth = Math.ceil(x1 - x0 + PADDING * 2)
 const viewBoxHeight = Math.ceil(y1 - y0 + PADDING * 2)
 const viewBox = `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`
+
+// Matches visited-map-zoom.tsx (a client module, so its value can't be
+// imported here).
+const MAX_ZOOM = 6
+// Share of the map around the focused country, so it isn't edge to edge.
+const FOCUS_FILL = 0.7
+// Islands and territories smaller than this share of a country's largest
+// landmass are left out of its frame (Alaska is ~21% of the contiguous US,
+// French Guiana ~15% of France; Hokkaido is ~36% of Honshu).
+const MAIN_LAND = 0.25
+
+type Polygon = GeoJSON.Polygon["coordinates"]
+
+function polygonsOf(code: string): Polygon[] {
+  return world.features.flatMap((country) => {
+    if (codeOf(country) !== code) return []
+    const { geometry } = country
+    if (geometry.type === "Polygon") return [geometry.coordinates]
+    if (geometry.type === "MultiPolygon") return geometry.coordinates
+    return []
+  })
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
+}
+
+// Initial zoom that frames a country: `k` is the scale and `x`/`y` the
+// translation as fractions of the map's size (see visited-map-zoom.tsx).
+function focusView(code: string): VisitedMapView | undefined {
+  const key = code.toUpperCase()
+  const polygons = polygonsOf(key).map((coordinates) => ({
+    type: "Polygon" as const,
+    coordinates,
+  }))
+
+  let bounds: [[number, number], [number, number]]
+  if (polygons.length) {
+    const areas = polygons.map((polygon) => geoArea(polygon))
+    const largest = Math.max(...areas)
+    bounds = path.bounds({
+      type: "MultiPolygon",
+      coordinates: polygons
+        .filter((_, index) => areas[index] >= largest * MAIN_LAND)
+        .map((polygon) => polygon.coordinates),
+    })
+  } else {
+    // Too small to be drawn at this scale (Singapore, Malta…): zoom all the
+    // way in on its center.
+    const data = countryData[key as VisitedMapCountryCode]
+    const point = data && projection([data[2], data[3]])
+    if (!point) return undefined
+    bounds = [point, point]
+  }
+
+  const [[bx0, by0], [bx1, by1]] = bounds
+  const width = (bx1 - bx0) / viewBoxWidth
+  const height = (by1 - by0) / viewBoxHeight
+  const k = clamp(FOCUS_FILL / Math.max(width, height, 1e-6), 1, MAX_ZOOM)
+  const centerX = ((bx0 + bx1) / 2 - viewBoxX) / viewBoxWidth
+  const centerY = ((by0 + by1) / 2 - viewBoxY) / viewBoxHeight
+  return {
+    k,
+    x: clamp(0.5 - centerX * k, 1 - k, 0),
+    y: clamp(0.5 - centerY * k, 1 - k, 0),
+  }
+}
 
 const pinStyles: Record<VisitedMapVariant, string> = {
   visited: "fill-sky-500 stroke-sky-700 dark:fill-sky-400 dark:stroke-sky-200",
@@ -628,6 +713,8 @@ export function VisitedMap({
   countryPins = true,
   hideStats = false,
   hideLegend = false,
+  zoomable = false,
+  focus,
   className,
 }: VisitedMapProps) {
   const highlighted = resolveCountries(countries, places)
@@ -659,6 +746,79 @@ export function VisitedMap({
     usedVariants.has(item.variant),
   )
 
+  const initialView = focus ? focusView(focus) : undefined
+
+  // The SVG and its tooltips; with `zoomable` they move and scale together.
+  // --visited-map-zoom (set by VisitedMapZoom) keeps pins, tooltips and
+  // borders the same size at any zoom.
+  const layer = (
+    <>
+      <svg viewBox={viewBox} className="block h-auto w-full" aria-hidden>
+        <g
+          className="fill-muted stroke-border [stroke-width:calc(0.5px/var(--visited-map-zoom,1))]"
+          strokeWidth={0.5}
+        >
+          {countryPaths.map(({ key, code, d }) => {
+            const variant = code ? highlighted.get(code) : undefined
+            return (
+              <path
+                key={key}
+                d={d}
+                data-country={code}
+                data-variant={variant}
+                className={variant ? countryStyles[variant] : undefined}
+              />
+            )
+          })}
+        </g>
+        {points.map((point) => (
+          <g
+            key={point.key}
+            data-variant={point.variant}
+            className={cn(
+              "origin-center transform-fill [scale:calc(1/var(--visited-map-zoom,1))]",
+              pinStyles[point.variant],
+            )}
+          >
+            {point.variant === "current" && (
+              <circle
+                cx={point.cx}
+                cy={point.cy}
+                r={5}
+                className="origin-center animate-ping stroke-none opacity-75 transform-fill"
+              />
+            )}
+            <circle
+              cx={point.cx}
+              cy={point.cy}
+              r={point.variant === "current" ? 5 : 4}
+              strokeWidth={1.5}
+            />
+          </g>
+        ))}
+      </svg>
+      {/*
+        Tooltips are plain HTML laid over the SVG so their text doesn't shrink
+        with the map. Each hit area is focusable, so hover, click/tap and
+        keyboard focus all show the tooltip with CSS only (no JS needed).
+      */}
+      <ul aria-label="Places" className="absolute inset-0">
+        {points.map((point) => (
+          <li
+            key={point.key}
+            tabIndex={0}
+            className="group absolute size-5 -translate-x-1/2 -translate-y-1/2 [scale:calc(1/var(--visited-map-zoom,1))] cursor-pointer rounded-full outline-none hover:z-10 focus:z-10 focus-visible:ring-2 focus-visible:ring-ring"
+            style={{ left: `${point.left}%`, top: `${point.top}%` }}
+          >
+            <span className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 rounded-md border bg-popover px-2 py-1 text-xs whitespace-nowrap text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus:opacity-100">
+              {point.name}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </>
+  )
+
   return (
     <div
       data-slot="visited-map"
@@ -669,63 +829,27 @@ export function VisitedMap({
         className="@container rounded-xl border bg-card p-2"
       >
         <div className="relative">
-          <svg viewBox={viewBox} className="block h-auto w-full" aria-hidden>
-            <g className="fill-muted stroke-border" strokeWidth={0.5}>
-              {countryPaths.map(({ key, code, d }) => {
-                const variant = code ? highlighted.get(code) : undefined
-                return (
-                  <path
-                    key={key}
-                    d={d}
-                    data-country={code}
-                    data-variant={variant}
-                    className={variant ? countryStyles[variant] : undefined}
-                  />
-                )
-              })}
-            </g>
-            {points.map((point) => (
-              <g
-                key={point.key}
-                data-variant={point.variant}
-                className={pinStyles[point.variant]}
+          {zoomable ? (
+            <VisitedMapZoom initialView={initialView}>{layer}</VisitedMapZoom>
+          ) : initialView ? (
+            // Focused but not zoomable: the same transform, applied once on
+            // the server, so it still ships no JavaScript.
+            <div className="relative overflow-hidden rounded-lg">
+              <div
+                className="relative origin-top-left"
+                style={
+                  {
+                    transform: `translate(${initialView.x * 100}%, ${initialView.y * 100}%) scale(${initialView.k})`,
+                    "--visited-map-zoom": initialView.k,
+                  } as React.CSSProperties
+                }
               >
-                {point.variant === "current" && (
-                  <circle
-                    cx={point.cx}
-                    cy={point.cy}
-                    r={5}
-                    className="origin-center animate-ping stroke-none opacity-75 transform-fill"
-                  />
-                )}
-                <circle
-                  cx={point.cx}
-                  cy={point.cy}
-                  r={point.variant === "current" ? 5 : 4}
-                  strokeWidth={1.5}
-                />
-              </g>
-            ))}
-          </svg>
-          {/*
-          Tooltips are plain HTML laid over the SVG so their text doesn't shrink
-          with the map. Each hit area is focusable, so hover, click/tap and
-          keyboard focus all show the tooltip with CSS only (no JS needed).
-        */}
-          <ul aria-label="Places" className="absolute inset-0">
-            {points.map((point) => (
-              <li
-                key={point.key}
-                tabIndex={0}
-                className="group absolute size-5 -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-full outline-none hover:z-10 focus:z-10 focus-visible:ring-2 focus-visible:ring-ring"
-                style={{ left: `${point.left}%`, top: `${point.top}%` }}
-              >
-                <span className="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 rounded-md border bg-popover px-2 py-1 text-xs whitespace-nowrap text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus:opacity-100">
-                  {point.name}
-                </span>
-              </li>
-            ))}
-          </ul>
+                {layer}
+              </div>
+            </div>
+          ) : (
+            layer
+          )}
           {!hideStats && (
             <StatsOverlay stats={getVisitedStats({ countries, places })} />
           )}

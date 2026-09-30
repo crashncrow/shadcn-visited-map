@@ -6,6 +6,7 @@ An SVG world map for [shadcn/ui](https://ui.shadcn.com) that highlights the coun
 - **Works in Server Components.** No hooks and no `"use client"`, so the map renders as plain SVG on the server and the map data never reaches the browser. It also works in Client Components and outside the App Router.
 - **Follows your theme.** Countries use shadcn tokens (`fill-muted`, `stroke-border`, `bg-card`), so light and dark mode work out of the box.
 - **Tooltips without JavaScript.** Country and city names show on hover, click/tap and keyboard focus, using CSS only.
+- **Optional zoom.** Add `zoomable` to zoom and pan with buttons, ⌘/Ctrl + scroll, pinch and drag. Only then does the map ship a small client component.
 
 **[Live demo](https://shadcn-visited-map.vercel.app) · [Docs](https://shadcn-visited-map.vercel.app/docs) · [Examples](https://shadcn-visited-map.vercel.app/docs/examples)**
 
@@ -86,14 +87,16 @@ The total is 195: the 193 UN member states plus the Vatican and Palestine. Small
 
 ## Props
 
-| Prop          | Type                  | Default | Description                                                                                                               |
-| ------------- | --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `countries`   | `VisitedMapCountries` |         | Countries by status (ISO 3166-1 alpha-2 codes). Each is highlighted with its status color and gets a pin.                 |
-| `places`      | `VisitedMapPlace[]`   |         | Cities or any other point, e.g. Barcelona inside Spain.                                                                   |
-| `countryPins` | `boolean`             | `true`  | Show a pin at the center of each country in `countries`.                                                                  |
-| `hideStats`   | `boolean`             | `false` | Hide how much of the world you've seen, shown by default: a card on wide maps, a pill that expands on tap on narrow ones. |
-| `hideLegend`  | `boolean`             | `false` | Hide the legend under the map, which lists the statuses in use.                                                           |
-| `className`   | `string`              |         | Extra classes for the root element (the map card and its legend).                                                         |
+| Prop          | Type                    | Default | Description                                                                                                               |
+| ------------- | ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `countries`   | `VisitedMapCountries`   |         | Countries by status (ISO 3166-1 alpha-2 codes). Each is highlighted with its status color and gets a pin.                 |
+| `places`      | `VisitedMapPlace[]`     |         | Cities or any other point, e.g. Barcelona inside Spain.                                                                   |
+| `countryPins` | `boolean`               | `true`  | Show a pin at the center of each country in `countries`.                                                                  |
+| `hideStats`   | `boolean`               | `false` | Hide how much of the world you've seen, shown by default: a card on wide maps, a pill that expands on tap on narrow ones. |
+| `hideLegend`  | `boolean`               | `false` | Hide the legend under the map, which lists the statuses in use.                                                           |
+| `zoomable`    | `boolean`               | `false` | Zoom and pan (up to 6×): buttons, ⌘/Ctrl + scroll, pinch, drag and double-click. Adds a small client component.           |
+| `focus`       | `VisitedMapCountryCode` |         | Start zoomed in on a country, e.g. `"AR"`. With `zoomable` people can zoom out; without it the map stays cropped.         |
+| `className`   | `string`                |         | Extra classes for the root element (the map card and its legend).                                                         |
 
 ### `VisitedMapCountries`
 

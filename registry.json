@@ -15,6 +15,10 @@
         {
           "path": "registry/visited-map/visited-map.tsx",
           "type": "registry:component"
+        },
+        {
+          "path": "registry/visited-map/visited-map-zoom.tsx",
+          "type": "registry:component"
         }
       ],
       "categories": ["map", "data-display"]

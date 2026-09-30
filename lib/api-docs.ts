@@ -55,6 +55,19 @@ export const visitedMapProps: PropRow[] = [
       "Hide the legend under the map, which lists the statuses in use.",
   },
   {
+    name: "zoomable",
+    type: "boolean",
+    default: "false",
+    description:
+      "Let people zoom and pan the map (up to 6×): buttons in the corner, ⌘/Ctrl + scroll, pinch, drag and double-click. Pins, tooltips and borders keep their size. Adds a small client component; without it the map ships no JavaScript.",
+  },
+  {
+    name: "focus",
+    type: "VisitedMapCountryCode",
+    description:
+      'Start zoomed in on a country, e.g. "AR". Frames its main landmass (France without French Guiana, the US without Alaska). With zoomable, people can zoom out and reset brings them back; without it, the map stays cropped.',
+  },
+  {
     name: "className",
     type: "string",
     description:

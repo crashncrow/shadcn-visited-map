@@ -33,7 +33,7 @@ export default function Home() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <VisitedMap countries={demoCountries} places={demoPlaces} />
+        <VisitedMap countries={demoCountries} places={demoPlaces} zoomable />
       </section>
     </main>
   )
