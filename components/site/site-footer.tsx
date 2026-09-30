@@ -66,7 +66,7 @@ function FooterLink({ href, children }: { href: string; children: string }) {
 
 // Boxed columns with a striped bottom bar, in the style of shadcnblocks'
 // footer51 (written from scratch).
-export function HomeFooter() {
+export function SiteFooter() {
   return (
     <footer className="pb-16 sm:pb-24">
       {/* Full-width lines above and below the box, like the original. */}

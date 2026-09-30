@@ -169,9 +169,7 @@
   @media (width >= 48rem) {
     margin-left: max(
       0px,
-      calc(
-        (100vw - var(--content-width)) / 2 - var(--sidebar-width) - 2.5rem
-      )
+      calc((100vw - var(--content-width)) / 2 - var(--sidebar-width) - 2.5rem)
     );
     margin-right: 0;
   }
