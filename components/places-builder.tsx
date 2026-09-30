@@ -38,7 +38,7 @@ import {
   type VisitedMapVariant,
 } from "@/registry/visited-map/visited-map"
 
-type Tab = "countries" | "territories"
+type Tab = "countries" | "territories" | "places"
 
 const byName = (a: Region, b: Region) => a.name.localeCompare(b.name)
 
@@ -391,8 +391,11 @@ export function PlacesBuilder() {
   const matches = (region: Region) =>
     (!selectedOnly || Boolean(regions[region.code])) &&
     (!q || normalize(`${region.name} ${region.code}`).includes(q))
-  const active = tabs.find((item) => item.value === tab)!
-  const other = tabs.find((item) => item.value !== tab)!
+  // The places tab has no regions; the region logic below then runs on
+  // countries but isn't rendered.
+  const regionTab = tab === "places" ? "countries" : tab
+  const active = tabs.find((item) => item.value === regionTab)!
+  const other = tabs.find((item) => item.value !== regionTab)!
   const groups = (
     Object.entries(active.groups) as [Continent, Region[]][]
   ).flatMap(([continent, all]) => {
@@ -478,70 +481,6 @@ export function PlacesBuilder() {
         </Tabs>
       </section>
 
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold tracking-tight">Add a place</h2>
-          <p className="text-sm text-muted-foreground">
-            Cities or anything else that isn&apos;t a country&apos;s center.
-          </p>
-        </div>
-        <AddPlaceForm />
-        {custom.length > 0 && (
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-muted/50 text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2 font-medium sm:px-4">Place</th>
-                  <th className="hidden px-4 py-2 font-medium md:table-cell">
-                    Coords [lng, lat]
-                  </th>
-                  <th className="px-1.5 py-2 font-medium sm:px-2">Status</th>
-                  <th className="w-10 px-1.5 py-2">
-                    <span className="sr-only">Remove</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {custom.map((place) => (
-                  <tr key={place.id} className="border-t">
-                    <td className="px-3 py-1.5 font-medium sm:px-4">
-                      {place.name}{" "}
-                      {place.country && (
-                        <span className="font-mono text-xs font-normal text-muted-foreground">
-                          {place.country}
-                        </span>
-                      )}
-                    </td>
-                    <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
-                      [{place.coords.join(", ")}]
-                    </td>
-                    <td className="px-1.5 py-1.5 sm:px-2">
-                      <StatusButtons
-                        label={`Status for ${place.name}`}
-                        value={place.variant}
-                        onSelect={(variant) =>
-                          setCustomVariant(place.id, variant)
-                        }
-                      />
-                    </td>
-                    <td className="px-1.5 py-1.5">
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Remove ${place.name}`}
-                        onClick={() => removeCustomPlace(place.id)}
-                      >
-                        <XIcon />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
       <section className="flex flex-col gap-3">
         <div
           role="tablist"
@@ -566,6 +505,19 @@ export function PlacesBuilder() {
               </CountPill>
             </button>
           ))}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "places"}
+            onClick={() => setTab("places")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+              tab === "places" && "bg-muted text-foreground",
+            )}
+          >
+            Places
+            <CountPill active={tab === "places"}>{custom.length}</CountPill>
+          </button>
         </div>
         {tab === "territories" && (
           <p className="text-sm text-muted-foreground">
@@ -575,134 +527,203 @@ export function PlacesBuilder() {
           </p>
         )}
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={`Search ${active.label.toLowerCase()} by name or code…`}
-              aria-label={`Search ${active.label.toLowerCase()}`}
-              className="pl-8"
-            />
-          </div>
-          <div
-            role="radiogroup"
-            aria-label="Show"
-            className="inline-flex w-fit shrink-0 rounded-lg border p-0.5 text-sm"
-          >
-            {[
-              { value: false, label: "All" },
-              { value: true, label: "Selected", count: selectedCount },
-            ].map((option) => (
-              <button
-                key={option.label}
-                type="button"
-                role="radio"
-                aria-checked={selectedOnly === option.value}
-                onClick={() => setSelectedOnly(option.value)}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
-                  selectedOnly === option.value && "bg-muted text-foreground",
-                )}
-              >
-                {option.label}
-                {option.count !== undefined && (
-                  <CountPill active={selectedOnly === option.value}>
-                    {option.count}
-                  </CountPill>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-muted/50 text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2 font-medium sm:px-4">
-                  {tab === "countries" ? "Country" : "Territory"}
-                </th>
-                <th className="hidden px-4 py-2 font-medium md:table-cell">
-                  Center [lng, lat]
-                </th>
-                <th className="px-1.5 py-2 font-medium sm:px-2">Status</th>
-              </tr>
-            </thead>
-            {groups.map((group) => (
-              <tbody key={group.continent}>
-                <tr className="border-t bg-muted/30">
-                  <th
-                    scope="rowgroup"
-                    colSpan={3}
-                    className="px-3 py-1.5 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase sm:px-4"
-                  >
-                    {group.continent}{" "}
-                    <span className="font-normal tabular-nums normal-case">
-                      · {group.selected} / {group.total}
-                    </span>
-                  </th>
-                </tr>
-                {group.rows.map((region) => (
-                  <tr
-                    key={region.code}
-                    className={cn(
-                      "border-t",
-                      regions[region.code] && "bg-muted/40",
-                    )}
-                  >
-                    <td className="px-3 py-1.5 sm:px-4">
-                      <span className="font-medium">{region.name}</span>{" "}
-                      <span className="font-mono text-xs text-muted-foreground">
-                        {region.code}
-                      </span>
-                    </td>
-                    <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
-                      [{countryCenters[region.code].join(", ")}]
-                    </td>
-                    <td className="px-1.5 py-1.5 sm:px-2">
-                      <StatusButtons
-                        label={`Status for ${region.name}`}
-                        value={regions[region.code]}
-                        onSelect={(variant) =>
-                          toggleRegion(region.code, variant)
-                        }
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            ))}
-            {rows.length === 0 && (
-              <tbody>
-                <tr className="border-t">
-                  <td
-                    colSpan={3}
-                    className="px-4 py-6 text-center text-muted-foreground"
-                  >
-                    {selectedOnly && !q ? (
-                      <>
-                        Nothing selected in {active.label.toLowerCase()} yet.
-                        {otherSelectedCount > 0 && (
-                          <> {switchTabLink(otherSelectedCount)}</>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        No {active.label.toLowerCase()} match “{query}”.
-                        {otherMatches > 0 && (
-                          <> {switchTabLink(otherMatches)}</>
-                        )}
-                      </>
-                    )}
-                  </td>
-                </tr>
-              </tbody>
+        {tab === "places" ? (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              Cities or anything else that isn&apos;t a country&apos;s center.
+            </p>
+            <AddPlaceForm />
+            {custom.length > 0 && (
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-muted/50 text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 font-medium sm:px-4">Place</th>
+                      <th className="hidden px-4 py-2 font-medium md:table-cell">
+                        Coords [lng, lat]
+                      </th>
+                      <th className="px-1.5 py-2 font-medium sm:px-2">
+                        Status
+                      </th>
+                      <th className="w-10 px-1.5 py-2">
+                        <span className="sr-only">Remove</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {custom.map((place) => (
+                      <tr key={place.id} className="border-t">
+                        <td className="px-3 py-1.5 font-medium sm:px-4">
+                          {place.name}{" "}
+                          {place.country && (
+                            <span className="font-mono text-xs font-normal text-muted-foreground">
+                              {place.country}
+                            </span>
+                          )}
+                        </td>
+                        <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
+                          [{place.coords.join(", ")}]
+                        </td>
+                        <td className="px-1.5 py-1.5 sm:px-2">
+                          <StatusButtons
+                            label={`Status for ${place.name}`}
+                            value={place.variant}
+                            onSelect={(variant) =>
+                              setCustomVariant(place.id, variant)
+                            }
+                          />
+                        </td>
+                        <td className="px-1.5 py-1.5">
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`Remove ${place.name}`}
+                            onClick={() => removeCustomPlace(place.id)}
+                          >
+                            <XIcon />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
-          </table>
-        </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="relative flex-1">
+                <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={`Search ${active.label.toLowerCase()} by name or code…`}
+                  aria-label={`Search ${active.label.toLowerCase()}`}
+                  className="pl-8"
+                />
+              </div>
+              <div
+                role="radiogroup"
+                aria-label="Show"
+                className="inline-flex w-fit shrink-0 rounded-lg border p-0.5 text-sm"
+              >
+                {[
+                  { value: false, label: "All" },
+                  { value: true, label: "Selected", count: selectedCount },
+                ].map((option) => (
+                  <button
+                    key={option.label}
+                    type="button"
+                    role="radio"
+                    aria-checked={selectedOnly === option.value}
+                    onClick={() => setSelectedOnly(option.value)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+                      selectedOnly === option.value &&
+                        "bg-muted text-foreground",
+                    )}
+                  >
+                    {option.label}
+                    {option.count !== undefined && (
+                      <CountPill active={selectedOnly === option.value}>
+                        {option.count}
+                      </CountPill>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-lg border">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-muted/50 text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 font-medium sm:px-4">
+                      {tab === "countries" ? "Country" : "Territory"}
+                    </th>
+                    <th className="hidden px-4 py-2 font-medium md:table-cell">
+                      Center [lng, lat]
+                    </th>
+                    <th className="px-1.5 py-2 font-medium sm:px-2">Status</th>
+                  </tr>
+                </thead>
+                {groups.map((group) => (
+                  <tbody key={group.continent}>
+                    <tr className="border-t bg-muted/30">
+                      <th
+                        scope="rowgroup"
+                        colSpan={3}
+                        className="px-3 py-1.5 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase sm:px-4"
+                      >
+                        {group.continent}{" "}
+                        <span className="font-normal tabular-nums normal-case">
+                          · {group.selected} / {group.total}
+                        </span>
+                      </th>
+                    </tr>
+                    {group.rows.map((region) => (
+                      <tr
+                        key={region.code}
+                        className={cn(
+                          "border-t",
+                          regions[region.code] && "bg-muted/40",
+                        )}
+                      >
+                        <td className="px-3 py-1.5 sm:px-4">
+                          <span className="font-medium">{region.name}</span>{" "}
+                          <span className="font-mono text-xs text-muted-foreground">
+                            {region.code}
+                          </span>
+                        </td>
+                        <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
+                          [{countryCenters[region.code].join(", ")}]
+                        </td>
+                        <td className="px-1.5 py-1.5 sm:px-2">
+                          <StatusButtons
+                            label={`Status for ${region.name}`}
+                            value={regions[region.code]}
+                            onSelect={(variant) =>
+                              toggleRegion(region.code, variant)
+                            }
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                ))}
+                {rows.length === 0 && (
+                  <tbody>
+                    <tr className="border-t">
+                      <td
+                        colSpan={3}
+                        className="px-4 py-6 text-center text-muted-foreground"
+                      >
+                        {selectedOnly && !q ? (
+                          <>
+                            Nothing selected in {active.label.toLowerCase()}{" "}
+                            yet.
+                            {otherSelectedCount > 0 && (
+                              <> {switchTabLink(otherSelectedCount)}</>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            No {active.label.toLowerCase()} match “{query}”.
+                            {otherMatches > 0 && (
+                              <> {switchTabLink(otherMatches)}</>
+                            )}
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  </tbody>
+                )}
+              </table>
+            </div>
+          </>
+        )}
       </section>
     </div>
   )
