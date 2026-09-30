@@ -16,14 +16,16 @@ import {
 import { docsNav } from "@/lib/docs-nav"
 
 // Mirrors apps/v4/components/docs-sidebar.tsx from shadcn-ui/ui. The content's
-// left padding lines the item text up with the logo in the top bar.
+// left padding lines the item text up with the logo in the top bar. The top
+// margin matches the sticky offset, so the sidebar sits in the same place
+// whether or not the page scrolls (otherwise it jumps on short pages).
 export function DocsSidebar() {
   const pathname = usePathname()
 
   return (
     <Sidebar
       collapsible="none"
-      className="sticky top-[calc(var(--header-height)+0.6rem)] z-30 hidden h-[calc(100svh-10rem)] w-(--sidebar-width) shrink-0 overflow-hidden overscroll-none bg-transparent [--sidebar-menu-width:--spacing(56)] md:flex"
+      className="sticky top-[calc(var(--header-height)+0.6rem)] z-30 mt-[0.6rem] hidden h-[calc(100svh-10rem)] w-(--sidebar-width) shrink-0 overflow-hidden overscroll-none bg-transparent [--sidebar-menu-width:--spacing(56)] md:flex"
     >
       {/* A 1px separator that fades out at both ends. */}
       <div

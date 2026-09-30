@@ -6,9 +6,11 @@ import { CodeFrame } from "@/components/code-frame"
 export async function CodeBlock({
   code,
   lang = "tsx",
+  showCopy,
 }: {
   code: string
   lang?: string
+  showCopy?: boolean
 }) {
   const trimmed = code.trim()
   const html = await codeToHtml(trimmed, {
@@ -17,5 +19,5 @@ export async function CodeBlock({
     defaultColor: false,
   })
 
-  return <CodeFrame code={trimmed} html={html} />
+  return <CodeFrame code={trimmed} html={html} showCopy={showCopy} />
 }

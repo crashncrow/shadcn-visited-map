@@ -126,6 +126,8 @@
   }
   html {
     @apply font-sans;
+    /* Keep the layout from shifting sideways when a page stops scrolling. */
+    scrollbar-gutter: stable;
   }
 }
 /* Shiki dual themes (see components/code-block.tsx). */

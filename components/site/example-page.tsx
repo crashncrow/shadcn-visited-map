@@ -1,5 +1,6 @@
 import { CodeBlock } from "@/components/code-block"
-import { DocsPage, DocsSection } from "@/components/site/docs-page"
+import { DocsPage } from "@/components/site/docs-page"
+import { PreviewTabs } from "@/components/site/preview-tabs"
 import { exampleHref, type Example } from "@/lib/examples"
 import { VisitedMap } from "@/registry/visited-map/visited-map"
 
@@ -10,12 +11,12 @@ export function ExamplePage({ example }: { example: Example }) {
       title={example.title}
       description={example.description}
     >
-      <DocsSection title="Preview">
-        <VisitedMap {...example.props} />
-      </DocsSection>
-      <DocsSection title="Code">
-        <CodeBlock code={example.code} />
-      </DocsSection>
+      <PreviewTabs
+        preview={<VisitedMap {...example.props} />}
+        // "Copy code" is already next to the tabs.
+        code={<CodeBlock code={example.code} showCopy={false} />}
+        copyValue={example.code.trim()}
+      />
     </DocsPage>
   )
 }
