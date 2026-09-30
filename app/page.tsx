@@ -1,7 +1,7 @@
 import Link from "next/link"
 
 import { MapCheckIcon } from "@/components/map-check-icon"
-import { SiteFooter } from "@/components/site-footer"
+import { HomeFooter } from "@/components/site/home-footer"
 import { Button } from "@/components/ui/button"
 import { demoCountries, demoPlaces } from "@/lib/demo-places"
 import { VisitedMap } from "@/registry/visited-map/visited-map"
@@ -9,7 +9,7 @@ import { VisitedMap } from "@/registry/visited-map/visited-map"
 export default function Home() {
   return (
     <>
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16">
+      <main className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 pt-12 pb-20 sm:px-6 sm:pt-16 sm:pb-28">
         <section className="flex flex-col items-center gap-4 text-center">
           <MapCheckIcon className="size-12 sm:size-14" />
           <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
@@ -38,7 +38,7 @@ export default function Home() {
           <VisitedMap countries={demoCountries} places={demoPlaces} />
         </section>
       </main>
-      <SiteFooter />
+      <HomeFooter />
     </>
   )
 }
