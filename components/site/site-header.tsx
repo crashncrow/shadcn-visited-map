@@ -38,7 +38,7 @@ export function SiteHeader() {
             render={<Link href="/builder" />}
             nativeButton={false}
           >
-            <PlusIcon />
+            <PlusIcon data-icon="inline-start" />
             New
           </Button>
         </div>

@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site/site-header"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { siteUrl } from "@/lib/site"
+import { cn } from "@/lib/utils"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -58,7 +59,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={cn(
+        geistSans.variable,
+        geistMono.variable,
+        "h-full antialiased"
+      )}
     >
       <body className="flex min-h-full flex-col [--header-height:3.5rem]">
         <ThemeProvider

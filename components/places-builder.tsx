@@ -396,7 +396,7 @@ function AddPlaceForm() {
       </FieldGroup>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit">
-          <PlusIcon />
+          <PlusIcon data-icon="inline-start" />
           Add place
         </Button>
       </div>

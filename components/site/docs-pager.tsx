@@ -1,6 +1,7 @@
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react"
 import Link from "next/link"
 
+import { Button } from "@/components/ui/button"
 import { getPager } from "@/lib/docs-nav"
 
 export function DocsPager({ href }: { href: string }) {
@@ -12,24 +13,26 @@ export function DocsPager({ href }: { href: string }) {
       className="flex items-center justify-between gap-4 border-t pt-6"
     >
       {previous ? (
-        <Link
-          href={previous.href}
-          className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+        <Button
+          variant="outline"
+          render={<Link href={previous.href} />}
+          nativeButton={false}
         >
-          <ArrowLeftIcon className="size-4" />
+          <ArrowLeftIcon data-icon="inline-start" />
           {previous.title}
-        </Link>
+        </Button>
       ) : (
         <span />
       )}
       {next && (
-        <Link
-          href={next.href}
-          className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+        <Button
+          variant="outline"
+          render={<Link href={next.href} />}
+          nativeButton={false}
         >
           {next.title}
-          <ArrowRightIcon className="size-4" />
-        </Link>
+          <ArrowRightIcon data-icon="inline-end" />
+        </Button>
       )}
     </nav>
   )
