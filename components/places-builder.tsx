@@ -44,7 +44,6 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { countryCenters } from "@/lib/country-centers"
 import { parseCoordinates } from "@/lib/parse-coordinates"
 import {
   addCustomPlace,
@@ -414,15 +413,16 @@ const RegionRow = memo(function RegionRow({
   variant?: VisitedMapVariant
 }) {
   return (
-    <tr className={cn("border-t", variant && "bg-muted/40")}>
+    // Same row states as shadcn's TableRow.
+    <tr
+      data-state={variant ? "selected" : undefined}
+      className="border-t transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+    >
       <td className="px-3 py-1.5 sm:px-4">
         <span className="font-medium">{region.name}</span>{" "}
         <span className="font-mono text-xs text-muted-foreground">
           {region.code}
         </span>
-      </td>
-      <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
-        [{countryCenters[region.code].join(", ")}]
       </td>
       <td className="px-1.5 py-1.5 sm:px-2">
         <StatusButtons
@@ -643,7 +643,10 @@ export function PlacesBuilder() {
                     </thead>
                     <tbody>
                       {custom.map((place) => (
-                        <tr key={place.id} className="border-t">
+                        <tr
+                          key={place.id}
+                          className="border-t transition-colors hover:bg-muted/50"
+                        >
                           <td className="px-3 py-1.5 font-medium sm:px-4">
                             {place.name}{" "}
                             {place.country && (
@@ -728,10 +731,8 @@ export function PlacesBuilder() {
                       <th className="px-3 py-2 font-medium sm:px-4">
                         {tab === "countries" ? "Country" : "Territory"}
                       </th>
-                      <th className="hidden px-4 py-2 font-medium md:table-cell">
-                        Center [lng, lat]
-                      </th>
-                      <th className="px-1.5 py-2 font-medium sm:px-2">
+                      {/* w-0: hugs its buttons, the name takes the rest. */}
+                      <th className="w-0 px-1.5 py-2 font-medium sm:px-2">
                         Status
                       </th>
                     </tr>
@@ -742,7 +743,7 @@ export function PlacesBuilder() {
                     return (
                       <tbody key={group.continent}>
                         <tr className="border-t bg-muted/30">
-                          <th scope="rowgroup" colSpan={3} className="p-0">
+                          <th scope="rowgroup" colSpan={2} className="p-0">
                             <button
                               type="button"
                               aria-expanded={open}
@@ -784,7 +785,7 @@ export function PlacesBuilder() {
                     <tbody>
                       <tr className="border-t">
                         <td
-                          colSpan={3}
+                          colSpan={2}
                           className="px-4 py-6 text-center text-muted-foreground"
                         >
                           {selectedOnly && !q ? (
