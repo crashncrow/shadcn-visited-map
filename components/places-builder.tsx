@@ -12,8 +12,20 @@ import { useId, useRef, useState } from "react"
 import { CopyButton } from "@/components/copy-button"
 import { LiveCodeBlock } from "@/components/live-code-block"
 import { Button } from "@/components/ui/button"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  NativeSelect,
+  NativeSelectOptGroup,
+  NativeSelectOption,
+} from "@/components/ui/native-select"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
@@ -274,15 +286,6 @@ function StatusButtons({
 
 type FormErrors = { name?: string; coords?: string }
 
-function FieldError({ id, message }: { id: string; message?: string }) {
-  if (!message) return null
-  return (
-    <p id={id} className="text-sm text-destructive">
-      {message}
-    </p>
-  )
-}
-
 function AddPlaceForm() {
   const [name, setName] = useState("")
   const [coords, setCoords] = useState("")
@@ -325,10 +328,11 @@ function AddPlaceForm() {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3" noValidate>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium">Name</span>
+      <FieldGroup className="grid gap-3 sm:grid-cols-2">
+        <Field data-invalid={Boolean(errors.name)}>
+          <FieldLabel htmlFor={`${id}-name`}>Name</FieldLabel>
           <Input
+            id={`${id}-name`}
             ref={nameRef}
             value={name}
             onChange={(event) => {
@@ -339,16 +343,17 @@ function AddPlaceForm() {
             aria-invalid={Boolean(errors.name)}
             aria-describedby={errors.name ? nameErrorId : undefined}
           />
-          <FieldError id={nameErrorId} message={errors.name} />
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium">
-            Coordinates{" "}
+          <FieldError id={nameErrorId}>{errors.name}</FieldError>
+        </Field>
+        <Field data-invalid={Boolean(errors.coords)}>
+          <FieldLabel htmlFor={`${id}-coords`}>
+            Coordinates
             <span className="font-normal text-muted-foreground">
               lat, lng, as copied from Google Maps
             </span>
-          </span>
+          </FieldLabel>
           <Input
+            id={`${id}-coords`}
             ref={coordsRef}
             value={coords}
             onChange={(event) => {
@@ -360,41 +365,41 @@ function AddPlaceForm() {
             aria-invalid={Boolean(errors.coords)}
             aria-describedby={errors.coords ? coordsErrorId : undefined}
           />
-          <FieldError id={coordsErrorId} message={errors.coords} />
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium">
-            Country{" "}
+          <FieldError id={coordsErrorId}>{errors.coords}</FieldError>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-country`}>
+            Country
             <span className="font-normal text-muted-foreground">
               optional: highlights it on the map
             </span>
-          </span>
-          <select
+          </FieldLabel>
+          <NativeSelect
+            id={`${id}-country`}
             value={country}
             onChange={(event) => setCountry(event.target.value)}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
           >
-            <option value="">None</option>
+            <NativeSelectOption value="">None</NativeSelectOption>
             {countryOptions.map((group) => (
-              <optgroup key={group.label} label={group.label}>
+              <NativeSelectOptGroup key={group.label} label={group.label}>
                 {group.regions.map((region) => (
-                  <option key={region.code} value={region.code}>
+                  <NativeSelectOption key={region.code} value={region.code}>
                     {region.name} ({region.code})
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </optgroup>
+              </NativeSelectOptGroup>
             ))}
-          </select>
-        </label>
-        <div className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium">Status</span>
+          </NativeSelect>
+        </Field>
+        <Field>
+          <FieldTitle>Status</FieldTitle>
           <StatusButtons
             label="Status for the new place"
             value={variant}
             onSelect={setVariant}
           />
-        </div>
-      </div>
+        </Field>
+      </FieldGroup>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit">
           <PlusIcon />
