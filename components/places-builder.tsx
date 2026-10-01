@@ -11,6 +11,7 @@ import { useId, useRef, useState } from "react"
 
 import { CopyButton } from "@/components/copy-button"
 import { LiveCodeBlock } from "@/components/live-code-block"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -500,15 +501,15 @@ export function PlacesBuilder() {
             </div>
           </div>
           {saveFailed && (
-            <p
-              role="alert"
-              className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
-            >
-              <TriangleAlertIcon className="mt-0.5 size-4 shrink-0" />
-              This browser isn&apos;t letting the page save (storage is blocked
-              or full), so your places will be lost when you leave. Copy them
-              before closing the page.
-            </p>
+            <Alert variant="destructive">
+              <TriangleAlertIcon />
+              <AlertTitle>Your places aren&apos;t being saved</AlertTitle>
+              <AlertDescription>
+                This browser isn&apos;t letting the page save (storage is
+                blocked or full), so they will be lost when you leave. Copy them
+                before closing the page.
+              </AlertDescription>
+            </Alert>
           )}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             {(
