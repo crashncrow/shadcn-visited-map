@@ -381,7 +381,9 @@ const world = {
 }
 
 const projection = geoMercator().fitSize([WIDTH, HEIGHT], world)
-const path = geoPath(projection)
+// One decimal is plenty (0.1 of a 960-wide viewBox, still sub-pixel at the
+// maximum zoom) and makes the markup about a quarter smaller than d3's default 3.
+const path = geoPath(projection).digits(1)
 
 type CountryFeature = (typeof world.features)[number]
 
