@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/" },
   // Each page's title and description fill og:* and twitter:* on their own;
-  // the image comes from app/opengraph-image.tsx.
+  // the image is app/opengraph-image.png (the home demo in the dark theme).
   openGraph: {
     type: "website",
     siteName: "Visited Map",

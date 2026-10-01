@@ -1,0 +1,1 @@
+Visited Map: a world map for shadcn/ui with visited, lived and wishlist countries
