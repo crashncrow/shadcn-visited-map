@@ -787,7 +787,7 @@ export function VisitedMap({
                 cx={point.cx}
                 cy={point.cy}
                 r={5}
-                className="origin-center animate-ping stroke-none opacity-75 transform-fill"
+                className="origin-center stroke-none opacity-75 transform-fill motion-safe:animate-ping"
               />
             )}
             <circle
