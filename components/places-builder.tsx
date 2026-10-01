@@ -2,6 +2,7 @@
 
 import {
   ChevronRightIcon,
+  CodeIcon,
   PlusIcon,
   SearchIcon,
   TriangleAlertIcon,
@@ -13,6 +14,13 @@ import { CopyButton } from "@/components/copy-button"
 import { LiveCodeBlock } from "@/components/live-code-block"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import {
   Field,
   FieldError,
@@ -542,10 +550,18 @@ export function PlacesBuilder() {
               // "Copy code" is already in the header, for both tabs.
               <LiveCodeBlock code={code} showCopy={false} />
             ) : (
-              <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-                Pick a status for a country below or add your own place to
-                generate the code for your map.
-              </p>
+              <Empty className="border">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <CodeIcon />
+                  </EmptyMedia>
+                  <EmptyTitle>No code yet</EmptyTitle>
+                  <EmptyDescription>
+                    Pick a status for a country below or add your own place to
+                    generate the code for your map.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             )}
           </TabsContent>
         </Tabs>
