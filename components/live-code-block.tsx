@@ -10,24 +10,25 @@ import { CodeFrame, plainCodeHtml } from "@/components/code-frame"
 let highlighterPromise: Promise<HighlighterCore> | null = null
 
 function loadHighlighter() {
+  // Direct paths instead of the "shiki/langs" and "shiki/themes" indexes,
+  // which list every language and theme.
   highlighterPromise ??= Promise.all([
     import("shiki/core"),
     import("shiki/engine/javascript"),
-    import("shiki/langs"),
-    import("shiki/themes"),
+    import("shiki/langs/tsx.mjs"),
+    import("shiki/themes/github-light.mjs"),
+    import("shiki/themes/github-dark.mjs"),
   ]).then(
     ([
       { createHighlighterCore },
       { createJavaScriptRegexEngine },
-      { bundledLanguages },
-      { bundledThemes },
+      tsx,
+      githubLight,
+      githubDark,
     ]) =>
       createHighlighterCore({
-        langs: [bundledLanguages.tsx()],
-        themes: [
-          bundledThemes["github-light"](),
-          bundledThemes["github-dark"](),
-        ],
+        langs: [tsx.default],
+        themes: [githubLight.default, githubDark.default],
         engine: createJavaScriptRegexEngine(),
       }),
   )
