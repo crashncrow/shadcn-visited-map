@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { countryCenters } from "@/lib/country-centers"
 import { parseCoordinates } from "@/lib/parse-coordinates"
 import {
@@ -210,6 +211,24 @@ function CountPill({
     >
       {children}
     </span>
+  )
+}
+
+// The count inside a region tab. The tab list is muted and the selected tab is
+// not, so the pill takes the opposite background to stay visible.
+function RegionCount({
+  selected,
+  children,
+}: {
+  selected: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <CountPill
+      className={selected ? "bg-muted text-foreground" : "bg-background"}
+    >
+      {children}
+    </CountPill>
   )
 }
 
@@ -526,44 +545,28 @@ export function PlacesBuilder() {
         </Tabs>
       </section>
 
-      <section className="flex flex-col gap-3">
-        <div
-          role="tablist"
-          aria-label="Region type"
-          className="inline-flex w-fit rounded-lg border p-0.5 text-sm"
-        >
+      <Tabs
+        value={tab}
+        onValueChange={(value) => setTab(value as Tab)}
+        className="gap-3"
+        render={<section />}
+      >
+        <TabsList aria-label="Region type">
           {tabs.map((item) => (
-            <button
-              key={item.value}
-              type="button"
-              role="tab"
-              aria-selected={tab === item.value}
-              onClick={() => setTab(item.value)}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
-                tab === item.value && "bg-muted text-foreground",
-              )}
-            >
+            <TabsTrigger key={item.value} value={item.value} className="px-2.5">
               {item.label}
-              <CountPill active={tab === item.value}>
+              <RegionCount selected={tab === item.value}>
                 {item.regions.length}
-              </CountPill>
-            </button>
+              </RegionCount>
+            </TabsTrigger>
           ))}
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === "places"}
-            onClick={() => setTab("places")}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
-              tab === "places" && "bg-muted text-foreground",
-            )}
-          >
+          <TabsTrigger value="places" className="px-2.5">
             Places
-            <CountPill active={tab === "places"}>{custom.length}</CountPill>
-          </button>
-        </div>
+            <RegionCount selected={tab === "places"}>
+              {custom.length}
+            </RegionCount>
+          </TabsTrigger>
+        </TabsList>
         {tab === "territories" && (
           <p className="text-sm text-muted-foreground">
             Territories aren&apos;t among the 195 countries, so they never count
@@ -572,225 +575,220 @@ export function PlacesBuilder() {
           </p>
         )}
 
-        {tab === "places" ? (
-          <div className="flex flex-col gap-4">
-            <p className="text-sm text-muted-foreground">
-              Cities or anything else that isn&apos;t a country&apos;s center.
-            </p>
-            <AddPlaceForm />
-            {custom.length > 0 && (
+        {/* One panel for whichever tab is active: countries and territories
+            share the same table. */}
+        <TabsContent value={tab} className="flex flex-col gap-3">
+          {tab === "places" ? (
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-muted-foreground">
+                Cities or anything else that isn&apos;t a country&apos;s center.
+              </p>
+              <AddPlaceForm />
+              {custom.length > 0 && (
+                <div className="overflow-x-auto rounded-lg border">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-muted/50 text-muted-foreground">
+                      <tr>
+                        <th className="px-3 py-2 font-medium sm:px-4">Place</th>
+                        <th className="hidden px-4 py-2 font-medium md:table-cell">
+                          Coords [lng, lat]
+                        </th>
+                        <th className="px-1.5 py-2 font-medium sm:px-2">
+                          Status
+                        </th>
+                        <th className="w-10 px-1.5 py-2">
+                          <span className="sr-only">Remove</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {custom.map((place) => (
+                        <tr key={place.id} className="border-t">
+                          <td className="px-3 py-1.5 font-medium sm:px-4">
+                            {place.name}{" "}
+                            {place.country && (
+                              <span className="font-mono text-xs font-normal text-muted-foreground">
+                                {place.country}
+                              </span>
+                            )}
+                          </td>
+                          <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
+                            [{place.coords.join(", ")}]
+                          </td>
+                          <td className="px-1.5 py-1.5 sm:px-2">
+                            <StatusButtons
+                              label={`Status for ${place.name}`}
+                              value={place.variant}
+                              onSelect={(variant) =>
+                                setCustomVariant(place.id, variant)
+                              }
+                            />
+                          </td>
+                          <td className="px-1.5 py-1.5">
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={`Remove ${place.name}`}
+                              onClick={() => removeCustomPlace(place.id)}
+                            >
+                              <XIcon />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="relative flex-1">
+                  <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder={`Search ${active.label.toLowerCase()} by name or code…`}
+                    aria-label={`Search ${active.label.toLowerCase()}`}
+                    className="pl-8"
+                  />
+                </div>
+                <ToggleGroup
+                  aria-label="Show"
+                  variant="outline"
+                  spacing={0}
+                  className="shrink-0"
+                  value={[selectedOnly ? "selected" : "all"]}
+                  // Clicking the pressed item sends []: keep the current one.
+                  onValueChange={([value]) => {
+                    if (value) setSelectedOnly(value === "selected")
+                  }}
+                >
+                  <ToggleGroupItem value="all">All</ToggleGroupItem>
+                  <ToggleGroupItem value="selected">
+                    Selected
+                    <CountPill active={selectedOnly}>{selectedCount}</CountPill>
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
               <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-muted/50 text-muted-foreground">
                     <tr>
-                      <th className="px-3 py-2 font-medium sm:px-4">Place</th>
+                      <th className="px-3 py-2 font-medium sm:px-4">
+                        {tab === "countries" ? "Country" : "Territory"}
+                      </th>
                       <th className="hidden px-4 py-2 font-medium md:table-cell">
-                        Coords [lng, lat]
+                        Center [lng, lat]
                       </th>
                       <th className="px-1.5 py-2 font-medium sm:px-2">
                         Status
                       </th>
-                      <th className="w-10 px-1.5 py-2">
-                        <span className="sr-only">Remove</span>
-                      </th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {custom.map((place) => (
-                      <tr key={place.id} className="border-t">
-                        <td className="px-3 py-1.5 font-medium sm:px-4">
-                          {place.name}{" "}
-                          {place.country && (
-                            <span className="font-mono text-xs font-normal text-muted-foreground">
-                              {place.country}
-                            </span>
+                  {groups.map((group) => {
+                    const key = `${regionTab}:${group.continent}`
+                    const open = filtering || expanded.has(key)
+                    return (
+                      <tbody key={group.continent}>
+                        <tr className="border-t bg-muted/30">
+                          <th scope="rowgroup" colSpan={3} className="p-0">
+                            <button
+                              type="button"
+                              aria-expanded={open}
+                              disabled={filtering}
+                              onClick={() => toggleContinent(key)}
+                              className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase transition-colors outline-none hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:pointer-events-none sm:px-4"
+                            >
+                              <ChevronRightIcon
+                                aria-hidden
+                                className={cn(
+                                  "size-3.5 shrink-0 transition-transform",
+                                  open && "rotate-90",
+                                )}
+                              />
+                              {group.continent}
+                              {/* Highlighted when the continent has a selection,
+                                so it shows even while collapsed. */}
+                              <CountPill
+                                active={group.selected > 0}
+                                className="ml-1 font-normal tracking-normal normal-case"
+                              >
+                                {group.selected} / {group.total}
+                              </CountPill>
+                            </button>
+                          </th>
+                        </tr>
+                        {open &&
+                          group.rows.map((region) => (
+                            <tr
+                              key={region.code}
+                              className={cn(
+                                "border-t",
+                                regions[region.code] && "bg-muted/40",
+                              )}
+                            >
+                              <td className="px-3 py-1.5 sm:px-4">
+                                <span className="font-medium">
+                                  {region.name}
+                                </span>{" "}
+                                <span className="font-mono text-xs text-muted-foreground">
+                                  {region.code}
+                                </span>
+                              </td>
+                              <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
+                                [{countryCenters[region.code].join(", ")}]
+                              </td>
+                              <td className="px-1.5 py-1.5 sm:px-2">
+                                <StatusButtons
+                                  label={`Status for ${region.name}`}
+                                  value={regions[region.code]}
+                                  onSelect={(variant) =>
+                                    toggleRegion(region.code, variant)
+                                  }
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    )
+                  })}
+                  {rows.length === 0 && (
+                    <tbody>
+                      <tr className="border-t">
+                        <td
+                          colSpan={3}
+                          className="px-4 py-6 text-center text-muted-foreground"
+                        >
+                          {selectedOnly && !q ? (
+                            <>
+                              Nothing selected in {active.label.toLowerCase()}{" "}
+                              yet.
+                              {otherSelectedCount > 0 && (
+                                <> {switchTabLink(otherSelectedCount)}</>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              No {active.label.toLowerCase()} match “{query}”.
+                              {otherMatches > 0 && (
+                                <> {switchTabLink(otherMatches)}</>
+                              )}
+                            </>
                           )}
                         </td>
-                        <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
-                          [{place.coords.join(", ")}]
-                        </td>
-                        <td className="px-1.5 py-1.5 sm:px-2">
-                          <StatusButtons
-                            label={`Status for ${place.name}`}
-                            value={place.variant}
-                            onSelect={(variant) =>
-                              setCustomVariant(place.id, variant)
-                            }
-                          />
-                        </td>
-                        <td className="px-1.5 py-1.5">
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={`Remove ${place.name}`}
-                            onClick={() => removeCustomPlace(place.id)}
-                          >
-                            <XIcon />
-                          </Button>
-                        </td>
                       </tr>
-                    ))}
-                  </tbody>
+                    </tbody>
+                  )}
                 </table>
               </div>
-            )}
-          </div>
-        ) : (
-          <>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <div className="relative flex-1">
-                <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder={`Search ${active.label.toLowerCase()} by name or code…`}
-                  aria-label={`Search ${active.label.toLowerCase()}`}
-                  className="pl-8"
-                />
-              </div>
-              <div
-                role="radiogroup"
-                aria-label="Show"
-                className="inline-flex w-fit shrink-0 rounded-lg border p-0.5 text-sm"
-              >
-                {[
-                  { value: false, label: "All" },
-                  { value: true, label: "Selected", count: selectedCount },
-                ].map((option) => (
-                  <button
-                    key={option.label}
-                    type="button"
-                    role="radio"
-                    aria-checked={selectedOnly === option.value}
-                    onClick={() => setSelectedOnly(option.value)}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
-                      selectedOnly === option.value &&
-                        "bg-muted text-foreground",
-                    )}
-                  >
-                    {option.label}
-                    {option.count !== undefined && (
-                      <CountPill active={selectedOnly === option.value}>
-                        {option.count}
-                      </CountPill>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="overflow-x-auto rounded-lg border">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-muted/50 text-muted-foreground">
-                  <tr>
-                    <th className="px-3 py-2 font-medium sm:px-4">
-                      {tab === "countries" ? "Country" : "Territory"}
-                    </th>
-                    <th className="hidden px-4 py-2 font-medium md:table-cell">
-                      Center [lng, lat]
-                    </th>
-                    <th className="px-1.5 py-2 font-medium sm:px-2">Status</th>
-                  </tr>
-                </thead>
-                {groups.map((group) => {
-                  const key = `${regionTab}:${group.continent}`
-                  const open = filtering || expanded.has(key)
-                  return (
-                    <tbody key={group.continent}>
-                      <tr className="border-t bg-muted/30">
-                        <th scope="rowgroup" colSpan={3} className="p-0">
-                          <button
-                            type="button"
-                            aria-expanded={open}
-                            disabled={filtering}
-                            onClick={() => toggleContinent(key)}
-                            className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase transition-colors outline-none hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:pointer-events-none sm:px-4"
-                          >
-                            <ChevronRightIcon
-                              aria-hidden
-                              className={cn(
-                                "size-3.5 shrink-0 transition-transform",
-                                open && "rotate-90",
-                              )}
-                            />
-                            {group.continent}
-                            {/* Highlighted when the continent has a selection,
-                                so it shows even while collapsed. */}
-                            <CountPill
-                              active={group.selected > 0}
-                              className="ml-1 font-normal tracking-normal normal-case"
-                            >
-                              {group.selected} / {group.total}
-                            </CountPill>
-                          </button>
-                        </th>
-                      </tr>
-                      {open &&
-                        group.rows.map((region) => (
-                          <tr
-                            key={region.code}
-                            className={cn(
-                              "border-t",
-                              regions[region.code] && "bg-muted/40",
-                            )}
-                          >
-                            <td className="px-3 py-1.5 sm:px-4">
-                              <span className="font-medium">{region.name}</span>{" "}
-                              <span className="font-mono text-xs text-muted-foreground">
-                                {region.code}
-                              </span>
-                            </td>
-                            <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
-                              [{countryCenters[region.code].join(", ")}]
-                            </td>
-                            <td className="px-1.5 py-1.5 sm:px-2">
-                              <StatusButtons
-                                label={`Status for ${region.name}`}
-                                value={regions[region.code]}
-                                onSelect={(variant) =>
-                                  toggleRegion(region.code, variant)
-                                }
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  )
-                })}
-                {rows.length === 0 && (
-                  <tbody>
-                    <tr className="border-t">
-                      <td
-                        colSpan={3}
-                        className="px-4 py-6 text-center text-muted-foreground"
-                      >
-                        {selectedOnly && !q ? (
-                          <>
-                            Nothing selected in {active.label.toLowerCase()}{" "}
-                            yet.
-                            {otherSelectedCount > 0 && (
-                              <> {switchTabLink(otherSelectedCount)}</>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            No {active.label.toLowerCase()} match “{query}”.
-                            {otherMatches > 0 && (
-                              <> {switchTabLink(otherMatches)}</>
-                            )}
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  </tbody>
-                )}
-              </table>
-            </div>
-          </>
-        )}
-      </section>
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
