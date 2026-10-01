@@ -242,33 +242,33 @@ function StatusButtons({
   onSelect: (variant: VisitedMapVariant) => void
 }) {
   return (
-    <div role="group" aria-label={label} className="flex items-center gap-0.5">
-      {visitedMapVariants.map((item) => {
-        const active = value === item.variant
-        return (
-          <button
-            key={item.variant}
-            type="button"
-            aria-pressed={active}
-            aria-label={item.label}
-            title={item.label}
-            onClick={() => onSelect(item.variant)}
-            className={cn(
-              "group/status grid size-6 place-items-center rounded-md outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring sm:size-7",
-              active && "bg-muted ring-1 ring-border",
-            )}
-          >
-            <VisitedMapSwatch
-              variant={item.variant}
-              className={cn(
-                "transition-opacity",
-                !active && "opacity-25 group-hover/status:opacity-70",
-              )}
-            />
-          </button>
-        )
-      })}
-    </div>
+    <ToggleGroup
+      aria-label={label}
+      size="sm"
+      spacing={0.5}
+      value={value ? [value] : []}
+      // Pressing the active status sends []: pass it again so the caller can
+      // toggle it off.
+      onValueChange={([next]) => {
+        const variant = (next ?? value) as VisitedMapVariant | undefined
+        if (variant) onSelect(variant)
+      }}
+    >
+      {visitedMapVariants.map((item) => (
+        <ToggleGroupItem
+          key={item.variant}
+          value={item.variant}
+          aria-label={item.label}
+          title={item.label}
+          className="size-6 min-w-0 p-0 aria-pressed:ring-1 aria-pressed:ring-border sm:size-7"
+        >
+          <VisitedMapSwatch
+            variant={item.variant}
+            className="opacity-25 transition-opacity group-hover/toggle:opacity-70 group-aria-pressed/toggle:opacity-100"
+          />
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
   )
 }
 
