@@ -13,6 +13,7 @@ import { useId, useRef, useState } from "react"
 import { CopyButton } from "@/components/copy-button"
 import { LiveCodeBlock } from "@/components/live-code-block"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Empty,
@@ -211,45 +212,24 @@ function normalize(text: string) {
     .toLowerCase()
 }
 
-function CountPill({
-  active = false,
+// A count next to a label. Filled when it's the active or non-empty one,
+// outlined otherwise, so it reads on any background.
+function CountBadge({
+  filled = false,
   className,
   children,
 }: {
-  active?: boolean
+  filled?: boolean
   className?: string
   children: React.ReactNode
 }) {
   return (
-    <span
-      className={cn(
-        "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs tabular-nums",
-        active
-          ? "bg-background text-foreground"
-          : "bg-muted text-muted-foreground",
-        className,
-      )}
+    <Badge
+      variant={filled ? "secondary" : "outline"}
+      className={cn("tabular-nums", className)}
     >
       {children}
-    </span>
-  )
-}
-
-// The count inside a region tab. The tab list is muted and the selected tab is
-// not, so the pill takes the opposite background to stay visible.
-function RegionCount({
-  selected,
-  children,
-}: {
-  selected: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <CountPill
-      className={selected ? "bg-muted text-foreground" : "bg-background"}
-    >
-      {children}
-    </CountPill>
+    </Badge>
   )
 }
 
@@ -494,7 +474,7 @@ export function PlacesBuilder() {
             </TabsList>
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <CountPill>{total}</CountPill>
+                <CountBadge filled>{total}</CountBadge>
                 {total === 1 ? "place" : "places"}
               </span>
               {total > 0 && (
@@ -577,16 +557,14 @@ export function PlacesBuilder() {
           {tabs.map((item) => (
             <TabsTrigger key={item.value} value={item.value} className="px-2.5">
               {item.label}
-              <RegionCount selected={tab === item.value}>
+              <CountBadge filled={tab === item.value}>
                 {item.regions.length}
-              </RegionCount>
+              </CountBadge>
             </TabsTrigger>
           ))}
           <TabsTrigger value="places" className="px-2.5">
             Places
-            <RegionCount selected={tab === "places"}>
-              {custom.length}
-            </RegionCount>
+            <CountBadge filled={tab === "places"}>{custom.length}</CountBadge>
           </TabsTrigger>
         </TabsList>
         {tab === "territories" && (
@@ -691,7 +669,7 @@ export function PlacesBuilder() {
                   <ToggleGroupItem value="all">All</ToggleGroupItem>
                   <ToggleGroupItem value="selected">
                     Selected
-                    <CountPill active={selectedOnly}>{selectedCount}</CountPill>
+                    <CountBadge>{selectedCount}</CountBadge>
                   </ToggleGroupItem>
                 </ToggleGroup>
               </div>
@@ -735,12 +713,12 @@ export function PlacesBuilder() {
                               {group.continent}
                               {/* Highlighted when the continent has a selection,
                                 so it shows even while collapsed. */}
-                              <CountPill
-                                active={group.selected > 0}
-                                className="ml-1 font-normal tracking-normal normal-case"
+                              <CountBadge
+                                filled={group.selected > 0}
+                                className="ml-1 tracking-normal normal-case"
                               >
                                 {group.selected} / {group.total}
-                              </CountPill>
+                              </CountBadge>
                             </button>
                           </th>
                         </tr>
