@@ -30,6 +30,11 @@ import {
   FieldTitle,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 import {
   NativeSelect,
@@ -644,17 +649,18 @@ export function PlacesBuilder() {
           ) : (
             <>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <div className="relative flex-1">
-                  <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
+                <InputGroup className="flex-1">
+                  <InputGroupAddon>
+                    <SearchIcon />
+                  </InputGroupAddon>
+                  <InputGroupInput
                     type="search"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder={`Search ${active.label.toLowerCase()} by name or code…`}
                     aria-label={`Search ${active.label.toLowerCase()}`}
-                    className="pl-8"
                   />
-                </div>
+                </InputGroup>
                 <ToggleGroup
                   aria-label="Show"
                   variant="outline"
