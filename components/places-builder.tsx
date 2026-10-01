@@ -8,7 +8,7 @@ import {
   TriangleAlertIcon,
   XIcon,
 } from "lucide-react"
-import { useId, useRef, useState } from "react"
+import { memo, useDeferredValue, useId, useRef, useState } from "react"
 
 import { CopyButton } from "@/components/copy-button"
 import { LiveCodeBlock } from "@/components/live-code-block"
@@ -404,6 +404,37 @@ function AddPlaceForm() {
   )
 }
 
+// Memoized so rows that stay in the table aren't re-rendered on every
+// keystroke or when another country's status changes.
+const RegionRow = memo(function RegionRow({
+  region,
+  variant,
+}: {
+  region: Region
+  variant?: VisitedMapVariant
+}) {
+  return (
+    <tr className={cn("border-t", variant && "bg-muted/40")}>
+      <td className="px-3 py-1.5 sm:px-4">
+        <span className="font-medium">{region.name}</span>{" "}
+        <span className="font-mono text-xs text-muted-foreground">
+          {region.code}
+        </span>
+      </td>
+      <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
+        [{countryCenters[region.code].join(", ")}]
+      </td>
+      <td className="px-1.5 py-1.5 sm:px-2">
+        <StatusButtons
+          label={`Status for ${region.name}`}
+          value={variant}
+          onSelect={(next) => toggleRegion(region.code, next)}
+        />
+      </td>
+    </tr>
+  )
+})
+
 export function PlacesBuilder() {
   const { regions, custom, options } = usePlacesBuilder()
   const saveFailed = usePlacesSaveFailed()
@@ -424,7 +455,11 @@ export function PlacesBuilder() {
   const total = selected.length + custom.length
   const code = total > 0 ? toCode(mapCountries, places, options) : ""
 
-  const q = normalize(query.trim())
+  // The table filters on a deferred copy of the query: the input stays
+  // responsive and React drops a half-drawn table when another key arrives.
+  const deferredQuery = useDeferredValue(query)
+  const stale = deferredQuery !== query
+  const q = normalize(deferredQuery.trim())
   const matches = (region: Region) =>
     (!selectedOnly || Boolean(regions[region.code])) &&
     (!q || normalize(`${region.name} ${region.code}`).includes(q))
@@ -680,7 +715,13 @@ export function PlacesBuilder() {
                 </ToggleGroup>
               </div>
 
-              <div className="overflow-x-auto rounded-lg border">
+              <div
+                className={cn(
+                  "overflow-x-auto rounded-lg border transition-opacity",
+                  // Dimmed while it catches up with the search input.
+                  stale && "opacity-60",
+                )}
+              >
                 <table className="w-full text-left text-sm">
                   <thead className="bg-muted/50 text-muted-foreground">
                     <tr>
@@ -730,34 +771,11 @@ export function PlacesBuilder() {
                         </tr>
                         {open &&
                           group.rows.map((region) => (
-                            <tr
+                            <RegionRow
                               key={region.code}
-                              className={cn(
-                                "border-t",
-                                regions[region.code] && "bg-muted/40",
-                              )}
-                            >
-                              <td className="px-3 py-1.5 sm:px-4">
-                                <span className="font-medium">
-                                  {region.name}
-                                </span>{" "}
-                                <span className="font-mono text-xs text-muted-foreground">
-                                  {region.code}
-                                </span>
-                              </td>
-                              <td className="hidden px-4 py-1.5 font-mono text-xs text-muted-foreground md:table-cell">
-                                [{countryCenters[region.code].join(", ")}]
-                              </td>
-                              <td className="px-1.5 py-1.5 sm:px-2">
-                                <StatusButtons
-                                  label={`Status for ${region.name}`}
-                                  value={regions[region.code]}
-                                  onSelect={(variant) =>
-                                    toggleRegion(region.code, variant)
-                                  }
-                                />
-                              </td>
-                            </tr>
+                              region={region}
+                              variant={regions[region.code]}
+                            />
                           ))}
                       </tbody>
                     )
@@ -779,7 +797,8 @@ export function PlacesBuilder() {
                             </>
                           ) : (
                             <>
-                              No {active.label.toLowerCase()} match “{query}”.
+                              No {active.label.toLowerCase()} match “
+                              {deferredQuery}”.
                               {otherMatches > 0 && (
                                 <> {switchTabLink(otherMatches)}</>
                               )}
