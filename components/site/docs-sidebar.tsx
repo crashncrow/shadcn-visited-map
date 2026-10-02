@@ -3,19 +3,12 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar"
 import { docsNav } from "@/lib/docs-nav"
+import { cn } from "@/lib/utils"
 
-// Mirrors apps/v4/components/docs-sidebar.tsx from shadcn-ui/ui. The content's
+// Looks like apps/v4/components/docs-sidebar.tsx from shadcn-ui/ui, as plain
+// markup: it's a fixed list of links, so it doesn't need the Sidebar
+// component (no collapsing, no mobile sheet, no context). The content's
 // left padding lines the item text up with the logo in the top bar. The top
 // margin matches the sticky offset, so the sidebar sits in the same place
 // whether or not the page scrolls (otherwise it jumps on short pages).
@@ -29,45 +22,52 @@ export function DocsSidebar() {
   const pathname = usePathname()
 
   return (
-    <Sidebar
-      collapsible="none"
-      className="sticky top-[calc(var(--header-height)+0.6rem)] z-30 mt-[0.6rem] hidden h-auto max-h-[calc(100svh-var(--header-height)-0.6rem-var(--footer-height))] w-(--sidebar-width) [--footer-height:24.25rem] shrink-0 overflow-hidden overscroll-none bg-transparent [--sidebar-menu-width:--spacing(56)] md:flex"
+    <aside
+      data-slot="docs-sidebar"
+      className="sticky top-[calc(var(--header-height)+0.6rem)] z-30 mt-[0.6rem] hidden max-h-[calc(100svh-var(--header-height)-0.6rem-var(--footer-height))] w-(--sidebar-width) shrink-0 flex-col overflow-hidden overscroll-none text-sidebar-foreground [--footer-height:24.25rem] [--sidebar-menu-width:--spacing(56)] md:flex"
     >
       {/* A 1px separator that fades out at both ends. */}
       <div
         aria-hidden
-        className="absolute top-12 right-2 bottom-0 hidden h-full w-px bg-[linear-gradient(to_bottom,transparent_0%,var(--border)_10%,var(--border)_90%,transparent_100%)] md:flex"
+        className="absolute top-12 right-2 bottom-0 h-full w-px bg-[linear-gradient(to_bottom,transparent_0%,var(--border)_10%,var(--border)_90%,transparent_100%)]"
       />
-      <SidebarContent className="no-scrollbar scroll-fade w-(--sidebar-menu-width) overflow-x-hidden pl-[11px]">
+      <nav
+        aria-label="Docs"
+        className="no-scrollbar scroll-fade flex min-h-0 w-(--sidebar-menu-width) flex-1 flex-col overflow-x-hidden overflow-y-auto pl-[11px]"
+      >
         {docsNav.map((group, index) => (
-          <SidebarGroup
+          <div
             key={group.title}
-            className={index === 0 ? "pt-12" : undefined}
+            className={cn("flex flex-col p-2", index === 0 && "pt-12")}
           >
-            <SidebarGroupLabel className="pl-[9px] font-medium text-muted-foreground">
+            <h2
+              data-slot="docs-sidebar-label"
+              className="flex h-8 shrink-0 items-center px-2 pl-[9px] text-xs font-medium text-muted-foreground"
+            >
               {group.title}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-0.5">
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      isActive={pathname === item.href}
-                      className="relative h-[30px] w-fit overflow-visible border border-transparent text-[0.8rem] font-medium after:absolute after:inset-x-0 after:-inset-y-1 after:z-0 after:rounded-md data-active:border-accent data-active:bg-accent"
-                      render={<Link href={item.href} />}
+            </h2>
+            <ul className="flex flex-col gap-0.5 text-sm">
+              {group.items.map((item) => {
+                const active = pathname === item.href
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      aria-current={active ? "page" : undefined}
+                      className="relative flex h-[30px] w-fit items-center rounded-md border border-transparent p-2 text-[0.8rem] font-medium ring-sidebar-ring outline-hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 aria-[current=page]:border-accent aria-[current=page]:bg-accent aria-[current=page]:text-sidebar-accent-foreground"
                     >
                       {/* Makes the whole row clickable while the highlight
                           only wraps the text. */}
                       <span className="absolute inset-0 flex w-(--sidebar-menu-width) bg-transparent" />
                       {item.title}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
         ))}
-      </SidebarContent>
-    </Sidebar>
+      </nav>
+    </aside>
   )
 }
