@@ -305,17 +305,19 @@ export function VisitedMapZoom({
         >
           {children}
         </div>
-        <div
-          aria-hidden
-          className={cn(
-            "pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-background/40 text-sm font-medium opacity-0 transition-opacity",
-            hint && "opacity-100",
-          )}
-        >
-          <span className="rounded-md border bg-popover px-2.5 py-1 text-popover-foreground shadow-sm">
-            {hint}
-          </span>
-        </div>
+      </div>
+      {/* Covers the whole card, not just the map: on narrow maps the card is
+          taller than the map. */}
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-0 z-30 flex rounded-lg items-center justify-center bg-background/40 text-sm font-medium opacity-0 transition-opacity",
+          hint && "opacity-100",
+        )}
+      >
+        <span className="rounded-md border bg-popover px-2.5 py-1 text-popover-foreground shadow-sm">
+          {hint}
+        </span>
       </div>
       <div
         role="group"

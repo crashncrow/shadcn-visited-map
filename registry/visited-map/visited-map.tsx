@@ -15,259 +15,270 @@ import { VisitedMapZoom, type VisitedMapView } from "./visited-map-zoom"
 export type VisitedMapVariant = "visited" | "lived" | "wishlist" | "current"
 
 // ISO 3166-1 alpha-2 code → [world-atlas id (null when too small to be drawn),
-// name, center lng, center lat]. Covers the 195 countries plus 50 territories.
-// Names and centers from Natural Earth (public domain); the centers are label
-// points, which sit on the main landmass (unlike centroids).
+// name, center lng, center lat, continent]. Covers the 195 countries plus 50
+// territories. Names, centers and continents from Natural Earth (public
+// domain); the centers are label points, which sit on the main landmass
+// (unlike centroids). Continents follow its UN regions, with the Americas
+// split in three and Mexico in North America, Cyprus in Europe, and the
+// Christmas, Cocos, South Georgia and French Southern islands by geography.
+type ContinentCode = "AF" | "AS" | "EU" | "NA" | "CA" | "SA" | "OC" | "AN"
+
 // prettier-ignore
 const countryData = {
-  AD: [null, "Andorra", 1.54, 42.55],
-  AE: ["784", "United Arab Emirates", 54.55, 23.47],
-  AF: ["004", "Afghanistan", 66.5, 34.16],
-  AG: [null, "Antigua and Barbuda", -61.79, 17.35],
-  AI: [null, "Anguilla", -63.03, 18.24],
-  AL: ["008", "Albania", 20.11, 40.65],
-  AM: ["051", "Armenia", 44.8, 40.46],
-  AO: ["024", "Angola", 17.98, -12.18],
-  AR: ["032", "Argentina", -64.17, -33.5],
-  AS: [null, "American Samoa", -170.75, -14.33],
-  AT: ["040", "Austria", 14.13, 47.52],
-  AU: ["036", "Australia", 134.05, -24.13],
-  AW: [null, "Aruba", -69.97, 12.52],
-  AX: [null, "Åland", 19.87, 60.16],
-  AZ: ["031", "Azerbaijan", 47.21, 40.4],
-  BA: ["070", "Bosnia and Herzegovina", 18.07, 44.09],
-  BB: [null, "Barbados", -59.57, 13.16],
-  BD: ["050", "Bangladesh", 89.68, 24.21],
-  BE: ["056", "Belgium", 4.8, 50.79],
-  BF: ["854", "Burkina Faso", -1.36, 12.67],
-  BG: ["100", "Bulgaria", 25.16, 42.51],
-  BH: [null, "Bahrain", 50.55, 26.06],
-  BI: ["108", "Burundi", 29.92, -3.33],
-  BJ: ["204", "Benin", 2.35, 10.32],
-  BL: [null, "Saint Barthélemy", -62.83, 17.9],
-  BM: [null, "Bermuda", -64.76, 32.3],
-  BN: ["096", "Brunei", 114.55, 4.45],
-  BO: ["068", "Bolivia", -64.59, -16.67],
-  BQ: [null, "Caribbean Netherlands", -63.13, 17.54],
-  BR: ["076", "Brazil", -49.56, -12.1],
-  BS: ["044", "Bahamas", -77.15, 26.4],
-  BT: ["064", "Bhutan", 90.04, 27.54],
-  BW: ["072", "Botswana", 24.18, -22.1],
-  BY: ["112", "Belarus", 28.42, 53.82],
-  BZ: ["084", "Belize", -88.71, 17.2],
-  CA: ["124", "Canada", -101.91, 60.32],
-  CC: [null, "Cocos", 96.83, -12.16],
-  CD: ["180", "DR Congo", 23.46, -1.86],
-  CF: ["140", "Central African Republic", 20.91, 6.99],
-  CG: ["178", "Congo", 15.9, 0.14],
-  CH: ["756", "Switzerland", 7.46, 46.72],
-  CI: ["384", "Ivory Coast", -5.57, 7.49],
-  CK: [null, "Cook Islands", -159.79, -21.22],
-  CL: ["152", "Chile", -72.32, -38.15],
-  CM: ["120", "Cameroon", 12.47, 4.59],
-  CN: ["156", "China", 106.34, 32.5],
-  CO: ["170", "Colombia", -73.17, 3.37],
-  CR: ["188", "Costa Rica", -84.08, 10.07],
-  CU: ["192", "Cuba", -77.98, 21.33],
-  CV: [null, "Cape Verde", -23.64, 15.07],
-  CW: [null, "Curaçao", -68.92, 12.15],
-  CX: [null, "Christmas Island", 105.67, -10.49],
-  CY: ["196", "Cyprus", 33.08, 34.91],
-  CZ: ["203", "Czechia", 15.38, 49.88],
-  DE: ["276", "Germany", 9.68, 50.96],
-  DJ: ["262", "Djibouti", 42.5, 11.98],
-  DK: ["208", "Denmark", 9.02, 55.97],
-  DM: [null, "Dominica", -61.34, 15.46],
-  DO: ["214", "Dominican Republic", -70.65, 19.1],
-  DZ: ["012", "Algeria", 2.81, 27.4],
-  EC: ["218", "Ecuador", -78.19, -1.26],
-  EE: ["233", "Estonia", 25.87, 58.72],
-  EG: ["818", "Egypt", 29.45, 26.19],
-  EH: ["732", "Western Sahara", -12.63, 23.97],
-  ER: ["232", "Eritrea", 38.29, 15.79],
-  ES: ["724", "Spain", -3.46, 40.09],
-  ET: ["231", "Ethiopia", 39.09, 8.03],
-  FI: ["246", "Finland", 27.28, 63.25],
-  FJ: ["242", "Fiji", 177.98, -17.83],
-  FM: [null, "Micronesia", 158.23, 6.89],
-  FO: [null, "Faroe Islands", -7.06, 62.19],
-  FR: ["250", "France", 2.55, 46.7],
-  GA: ["266", "Gabon", 11.84, -0.44],
-  GB: ["826", "United Kingdom", -2.12, 54.4],
-  GD: [null, "Grenada", -61.68, 12.11],
-  GE: ["268", "Georgia", 43.74, 41.87],
-  GF: [null, "French Guiana", -53.07, 4],
-  GG: [null, "Guernsey", -2.56, 49.46],
-  GH: ["288", "Ghana", -1.04, 7.72],
-  GI: [null, "Gibraltar", -5.35, 36.13],
-  GL: ["304", "Greenland", -39.34, 74.32],
-  GM: ["270", "Gambia", -15, 13.64],
-  GN: ["324", "Guinea", -10.02, 10.62],
-  GP: [null, "Guadeloupe", -61.43, 16.3],
-  GQ: ["226", "Equatorial Guinea", 10.34, 1.61],
-  GR: ["300", "Greece", 21.73, 39.49],
-  GS: [null, "South Georgia", -31.06, -55.68],
-  GT: ["320", "Guatemala", -90.5, 14.98],
-  GU: [null, "Guam", 144.7, 13.35],
-  GW: ["624", "Guinea-Bissau", -14.52, 12.16],
-  GY: ["328", "Guyana", -58.94, 5.12],
-  HK: [null, "Hong Kong", 114.1, 22.45],
-  HN: ["340", "Honduras", -86.89, 14.79],
-  HR: ["191", "Croatia", 16.37, 45.81],
-  HT: ["332", "Haiti", -72.22, 19.26],
-  HU: ["348", "Hungary", 19.45, 47.09],
-  ID: ["360", "Indonesia", 101.89, -0.95],
-  IE: ["372", "Ireland", -7.8, 53.08],
-  IL: ["376", "Israel", 34.85, 30.91],
-  IM: [null, "Isle of Man", -4.53, 54.22],
-  IN: ["356", "India", 79.36, 22.69],
-  IO: [null, "British Indian Ocean Territory", 71.35, -6.19],
-  IQ: ["368", "Iraq", 43.26, 33.09],
-  IR: ["364", "Iran", 54.93, 32.17],
-  IS: ["352", "Iceland", -18.67, 64.78],
-  IT: ["380", "Italy", 11.08, 44.73],
-  JE: [null, "Jersey", -2.09, 49.22],
-  JM: ["388", "Jamaica", -77.32, 18.14],
-  JO: ["400", "Jordan", 36.38, 30.81],
-  JP: ["392", "Japan", 138.44, 36.14],
-  KE: ["404", "Kenya", 37.91, 0.55],
-  KG: ["417", "Kyrgyzstan", 74.53, 41.67],
-  KH: ["116", "Cambodia", 104.5, 12.65],
-  KI: [null, "Kiribati", -157.38, 1.82],
-  KM: [null, "Comoros", 43.32, -11.73],
-  KN: [null, "Saint Kitts and Nevis", -62.76, 17.34],
-  KP: ["408", "North Korea", 126.44, 39.89],
-  KR: ["410", "South Korea", 128.13, 36.38],
-  KW: ["414", "Kuwait", 47.31, 29.41],
-  KY: [null, "Cayman Islands", -81.24, 19.32],
-  KZ: ["398", "Kazakhstan", 68.69, 49.05],
-  LA: ["418", "Laos", 102.53, 19.43],
-  LB: ["422", "Lebanon", 35.99, 34.13],
-  LC: [null, "Saint Lucia", -60.98, 13.89],
-  LI: [null, "Liechtenstein", 9.56, 47.11],
-  LK: ["144", "Sri Lanka", 80.7, 7.58],
-  LR: ["430", "Liberia", -9.46, 6.45],
-  LS: ["426", "Lesotho", 28.25, -29.48],
-  LT: ["440", "Lithuania", 24.09, 55.1],
-  LU: ["442", "Luxembourg", 6.08, 49.73],
-  LV: ["428", "Latvia", 25.46, 57.07],
-  LY: ["434", "Libya", 18.01, 26.64],
-  MA: ["504", "Morocco", -7.19, 31.65],
-  MC: [null, "Monaco", 7.4, 43.74],
-  MD: ["498", "Moldova", 28.49, 47.43],
-  ME: ["499", "Montenegro", 19.14, 42.8],
-  MF: [null, "Saint Martin", -63.05, 18.08],
-  MG: ["450", "Madagascar", 46.7, -18.63],
-  MH: [null, "Marshall Islands", 171.19, 7.08],
-  MK: ["807", "North Macedonia", 21.56, 41.56],
-  ML: ["466", "Mali", -2.04, 18.69],
-  MM: ["104", "Myanmar", 95.8, 21.57],
-  MN: ["496", "Mongolia", 104.15, 46],
-  MO: [null, "Macau", 113.56, 22.13],
-  MP: [null, "Northern Mariana Islands", 145.73, 15.19],
-  MQ: [null, "Martinique", -61.06, 14.71],
-  MR: ["478", "Mauritania", -9.74, 19.59],
-  MS: [null, "Montserrat", -62.19, 16.74],
-  MT: [null, "Malta", 14.43, 35.89],
-  MU: [null, "Mauritius", 57.57, -20.3],
-  MV: [null, "Maldives", 73.51, 4.17],
-  MW: ["454", "Malawi", 33.61, -13.39],
-  MX: ["484", "Mexico", -102.29, 23.92],
-  MY: ["458", "Malaysia", 113.84, 2.53],
-  MZ: ["508", "Mozambique", 37.84, -13.94],
-  NA: ["516", "Namibia", 17.11, -20.58],
-  NC: ["540", "New Caledonia", 165.08, -21.06],
-  NE: ["562", "Niger", 9.5, 17.45],
-  NF: [null, "Norfolk Island", 167.95, -29.03],
-  NG: ["566", "Nigeria", 7.5, 9.44],
-  NI: ["558", "Nicaragua", -85.07, 12.67],
-  NL: ["528", "Netherlands", 5.61, 52.42],
-  NO: ["578", "Norway", 9.68, 61.36],
-  NP: ["524", "Nepal", 83.64, 28.3],
-  NR: [null, "Nauru", 166.93, -0.52],
-  NU: [null, "Niue", -169.86, -19.05],
-  NZ: ["554", "New Zealand", 175.9, -39],
-  OM: ["512", "Oman", 57.34, 22.12],
-  PA: ["591", "Panama", -80.35, 8.72],
-  PE: ["604", "Peru", -72.9, -12.98],
-  PF: [null, "French Polynesia", -149.46, -17.63],
-  PG: ["598", "Papua New Guinea", 143.91, -5.7],
-  PH: ["608", "Philippines", 122.47, 11.2],
-  PK: ["586", "Pakistan", 68.55, 29.33],
-  PL: ["616", "Poland", 19.49, 51.99],
-  PM: [null, "Saint Pierre and Miquelon", -56.33, 47.04],
-  PN: [null, "Pitcairn Islands", -128.32, -24.36],
-  PR: ["630", "Puerto Rico", -66.48, 18.23],
-  PS: ["275", "Palestine", 35.29, 32.05],
-  PT: ["620", "Portugal", -8.27, 39.61],
-  PW: [null, "Palau", 134.58, 7.52],
-  PY: ["600", "Paraguay", -60.15, -21.67],
-  QA: ["634", "Qatar", 51.14, 25.24],
-  RE: [null, "Réunion", 55.54, -21.11],
-  RO: ["642", "Romania", 24.97, 45.73],
-  RS: ["688", "Serbia", 20.79, 44.19],
-  RU: ["643", "Russia", 44.69, 58.25],
-  RW: ["646", "Rwanda", 30.1, -1.9],
-  SA: ["682", "Saudi Arabia", 44.7, 23.81],
-  SB: ["090", "Solomon Islands", 159.17, -8.03],
-  SC: [null, "Seychelles", 55.48, -4.68],
-  SD: ["729", "Sudan", 29.26, 16.33],
-  SE: ["752", "Sweden", 19.02, 65.86],
-  SG: [null, "Singapore", 103.82, 1.37],
-  SH: [null, "Saint Helena", -5.71, -15.95],
-  SI: ["705", "Slovenia", 14.92, 46.06],
-  SJ: [null, "Svalbard", 18.08, 78.78],
-  SK: ["703", "Slovakia", 19.05, 48.73],
-  SL: ["694", "Sierra Leone", -11.76, 8.62],
-  SM: [null, "San Marino", 12.44, 43.93],
-  SN: ["686", "Senegal", -14.78, 15.14],
-  SO: ["706", "Somalia", 45.19, 3.57],
-  SR: ["740", "Suriname", -55.91, 4.14],
-  SS: ["728", "South Sudan", 30.39, 7.23],
-  ST: [null, "São Tomé and Príncipe", 7.02, 0.97],
-  SV: ["222", "El Salvador", -88.89, 13.69],
-  SX: [null, "Sint Maarten", -63.07, 18.04],
-  SY: ["760", "Syria", 38.28, 35.01],
-  SZ: ["748", "Eswatini", 31.47, -26.53],
-  TC: [null, "Turks and Caicos Islands", -71.75, 21.82],
-  TD: ["148", "Chad", 18.65, 15.14],
-  TF: ["260", "French Southern and Antarctic Lands", 69.12, -49.3],
-  TG: ["768", "Togo", 1.06, 8.81],
-  TH: ["764", "Thailand", 101.07, 15.46],
-  TJ: ["762", "Tajikistan", 72.59, 38.2],
-  TK: [null, "Tokelau", -172.49, -8.56],
-  TL: ["626", "Timor-Leste", 125.85, -8.8],
-  TM: ["795", "Turkmenistan", 58.68, 39.86],
-  TN: ["788", "Tunisia", 9.01, 33.69],
-  TO: [null, "Tonga", -175.16, -21.21],
-  TR: ["792", "Türkiye", 34.51, 39.35],
-  TT: ["780", "Trinidad and Tobago", -61.25, 10.45],
-  TV: [null, "Tuvalu", 179.21, -8.51],
-  TW: ["158", "Taiwan", 120.87, 23.65],
-  TZ: ["834", "Tanzania", 34.96, -6.05],
-  UA: ["804", "Ukraine", 32.14, 49.72],
-  UG: ["800", "Uganda", 32.95, 1.97],
-  US: ["840", "United States", -97.48, 39.54],
-  UY: ["858", "Uruguay", -55.97, -32.96],
-  UZ: ["860", "Uzbekistan", 64.01, 41.69],
-  VA: [null, "Vatican City", 12.45, 41.9],
-  VC: [null, "Saint Vincent and the Grenadines", -61.34, 13.09],
-  VE: ["862", "Venezuela", -64.6, 7.18],
-  VG: [null, "British Virgin Islands", -64.64, 18.43],
-  VI: [null, "United States Virgin Islands", -64.78, 17.75],
-  VN: ["704", "Vietnam", 105.39, 21.72],
-  VU: ["548", "Vanuatu", 166.91, -15.37],
-  WF: [null, "Wallis and Futuna", -178.14, -14.29],
-  WS: [null, "Samoa", -172.44, -13.64],
-  XK: [null, "Kosovo", 20.86, 42.59],
-  YE: ["887", "Yemen", 45.87, 15.33],
-  YT: [null, "Mayotte", 45.15, -12.77],
-  ZA: ["710", "South Africa", 23.67, -29.71],
-  ZM: ["894", "Zambia", 26.4, -14.66],
-  ZW: ["716", "Zimbabwe", 29.93, -18.91],
+  AD: [null, "Andorra", 1.54, 42.55, "EU"],
+  AE: ["784", "United Arab Emirates", 54.55, 23.47, "AS"],
+  AF: ["004", "Afghanistan", 66.5, 34.16, "AS"],
+  AG: [null, "Antigua and Barbuda", -61.79, 17.35, "CA"],
+  AI: [null, "Anguilla", -63.03, 18.24, "CA"],
+  AL: ["008", "Albania", 20.11, 40.65, "EU"],
+  AM: ["051", "Armenia", 44.8, 40.46, "AS"],
+  AO: ["024", "Angola", 17.98, -12.18, "AF"],
+  AR: ["032", "Argentina", -64.17, -33.5, "SA"],
+  AS: [null, "American Samoa", -170.75, -14.33, "OC"],
+  AT: ["040", "Austria", 14.13, 47.52, "EU"],
+  AU: ["036", "Australia", 134.05, -24.13, "OC"],
+  AW: [null, "Aruba", -69.97, 12.52, "CA"],
+  AX: [null, "Åland", 19.87, 60.16, "EU"],
+  AZ: ["031", "Azerbaijan", 47.21, 40.4, "AS"],
+  BA: ["070", "Bosnia and Herzegovina", 18.07, 44.09, "EU"],
+  BB: [null, "Barbados", -59.57, 13.16, "CA"],
+  BD: ["050", "Bangladesh", 89.68, 24.21, "AS"],
+  BE: ["056", "Belgium", 4.8, 50.79, "EU"],
+  BF: ["854", "Burkina Faso", -1.36, 12.67, "AF"],
+  BG: ["100", "Bulgaria", 25.16, 42.51, "EU"],
+  BH: [null, "Bahrain", 50.55, 26.06, "AS"],
+  BI: ["108", "Burundi", 29.92, -3.33, "AF"],
+  BJ: ["204", "Benin", 2.35, 10.32, "AF"],
+  BL: [null, "Saint Barthélemy", -62.83, 17.9, "CA"],
+  BM: [null, "Bermuda", -64.76, 32.3, "NA"],
+  BN: ["096", "Brunei", 114.55, 4.45, "AS"],
+  BO: ["068", "Bolivia", -64.59, -16.67, "SA"],
+  BQ: [null, "Caribbean Netherlands", -63.13, 17.54, "CA"],
+  BR: ["076", "Brazil", -49.56, -12.1, "SA"],
+  BS: ["044", "Bahamas", -77.15, 26.4, "CA"],
+  BT: ["064", "Bhutan", 90.04, 27.54, "AS"],
+  BW: ["072", "Botswana", 24.18, -22.1, "AF"],
+  BY: ["112", "Belarus", 28.42, 53.82, "EU"],
+  BZ: ["084", "Belize", -88.71, 17.2, "CA"],
+  CA: ["124", "Canada", -101.91, 60.32, "NA"],
+  CC: [null, "Cocos", 96.83, -12.16, "OC"],
+  CD: ["180", "DR Congo", 23.46, -1.86, "AF"],
+  CF: ["140", "Central African Republic", 20.91, 6.99, "AF"],
+  CG: ["178", "Congo", 15.9, 0.14, "AF"],
+  CH: ["756", "Switzerland", 7.46, 46.72, "EU"],
+  CI: ["384", "Ivory Coast", -5.57, 7.49, "AF"],
+  CK: [null, "Cook Islands", -159.79, -21.22, "OC"],
+  CL: ["152", "Chile", -72.32, -38.15, "SA"],
+  CM: ["120", "Cameroon", 12.47, 4.59, "AF"],
+  CN: ["156", "China", 106.34, 32.5, "AS"],
+  CO: ["170", "Colombia", -73.17, 3.37, "SA"],
+  CR: ["188", "Costa Rica", -84.08, 10.07, "CA"],
+  CU: ["192", "Cuba", -77.98, 21.33, "CA"],
+  CV: [null, "Cape Verde", -23.64, 15.07, "AF"],
+  CW: [null, "Curaçao", -68.92, 12.15, "CA"],
+  CX: [null, "Christmas Island", 105.67, -10.49, "OC"],
+  CY: ["196", "Cyprus", 33.08, 34.91, "EU"],
+  CZ: ["203", "Czechia", 15.38, 49.88, "EU"],
+  DE: ["276", "Germany", 9.68, 50.96, "EU"],
+  DJ: ["262", "Djibouti", 42.5, 11.98, "AF"],
+  DK: ["208", "Denmark", 9.02, 55.97, "EU"],
+  DM: [null, "Dominica", -61.34, 15.46, "CA"],
+  DO: ["214", "Dominican Republic", -70.65, 19.1, "CA"],
+  DZ: ["012", "Algeria", 2.81, 27.4, "AF"],
+  EC: ["218", "Ecuador", -78.19, -1.26, "SA"],
+  EE: ["233", "Estonia", 25.87, 58.72, "EU"],
+  EG: ["818", "Egypt", 29.45, 26.19, "AF"],
+  EH: ["732", "Western Sahara", -12.63, 23.97, "AF"],
+  ER: ["232", "Eritrea", 38.29, 15.79, "AF"],
+  ES: ["724", "Spain", -3.46, 40.09, "EU"],
+  ET: ["231", "Ethiopia", 39.09, 8.03, "AF"],
+  FI: ["246", "Finland", 27.28, 63.25, "EU"],
+  FJ: ["242", "Fiji", 177.98, -17.83, "OC"],
+  FM: [null, "Micronesia", 158.23, 6.89, "OC"],
+  FO: [null, "Faroe Islands", -7.06, 62.19, "EU"],
+  FR: ["250", "France", 2.55, 46.7, "EU"],
+  GA: ["266", "Gabon", 11.84, -0.44, "AF"],
+  GB: ["826", "United Kingdom", -2.12, 54.4, "EU"],
+  GD: [null, "Grenada", -61.68, 12.11, "CA"],
+  GE: ["268", "Georgia", 43.74, 41.87, "AS"],
+  GF: [null, "French Guiana", -53.07, 4, "SA"],
+  GG: [null, "Guernsey", -2.56, 49.46, "EU"],
+  GH: ["288", "Ghana", -1.04, 7.72, "AF"],
+  GI: [null, "Gibraltar", -5.35, 36.13, "EU"],
+  GL: ["304", "Greenland", -39.34, 74.32, "NA"],
+  GM: ["270", "Gambia", -15, 13.64, "AF"],
+  GN: ["324", "Guinea", -10.02, 10.62, "AF"],
+  GP: [null, "Guadeloupe", -61.43, 16.3, "CA"],
+  GQ: ["226", "Equatorial Guinea", 10.34, 1.61, "AF"],
+  GR: ["300", "Greece", 21.73, 39.49, "EU"],
+  GS: [null, "South Georgia", -31.06, -55.68, "AN"],
+  GT: ["320", "Guatemala", -90.5, 14.98, "CA"],
+  GU: [null, "Guam", 144.7, 13.35, "OC"],
+  GW: ["624", "Guinea-Bissau", -14.52, 12.16, "AF"],
+  GY: ["328", "Guyana", -58.94, 5.12, "SA"],
+  HK: [null, "Hong Kong", 114.1, 22.45, "AS"],
+  HN: ["340", "Honduras", -86.89, 14.79, "CA"],
+  HR: ["191", "Croatia", 16.37, 45.81, "EU"],
+  HT: ["332", "Haiti", -72.22, 19.26, "CA"],
+  HU: ["348", "Hungary", 19.45, 47.09, "EU"],
+  ID: ["360", "Indonesia", 101.89, -0.95, "AS"],
+  IE: ["372", "Ireland", -7.8, 53.08, "EU"],
+  IL: ["376", "Israel", 34.85, 30.91, "AS"],
+  IM: [null, "Isle of Man", -4.53, 54.22, "EU"],
+  IN: ["356", "India", 79.36, 22.69, "AS"],
+  IO: [null, "British Indian Ocean Territory", 71.35, -6.19, "AF"],
+  IQ: ["368", "Iraq", 43.26, 33.09, "AS"],
+  IR: ["364", "Iran", 54.93, 32.17, "AS"],
+  IS: ["352", "Iceland", -18.67, 64.78, "EU"],
+  IT: ["380", "Italy", 11.08, 44.73, "EU"],
+  JE: [null, "Jersey", -2.09, 49.22, "EU"],
+  JM: ["388", "Jamaica", -77.32, 18.14, "CA"],
+  JO: ["400", "Jordan", 36.38, 30.81, "AS"],
+  JP: ["392", "Japan", 138.44, 36.14, "AS"],
+  KE: ["404", "Kenya", 37.91, 0.55, "AF"],
+  KG: ["417", "Kyrgyzstan", 74.53, 41.67, "AS"],
+  KH: ["116", "Cambodia", 104.5, 12.65, "AS"],
+  KI: [null, "Kiribati", -157.38, 1.82, "OC"],
+  KM: [null, "Comoros", 43.32, -11.73, "AF"],
+  KN: [null, "Saint Kitts and Nevis", -62.76, 17.34, "CA"],
+  KP: ["408", "North Korea", 126.44, 39.89, "AS"],
+  KR: ["410", "South Korea", 128.13, 36.38, "AS"],
+  KW: ["414", "Kuwait", 47.31, 29.41, "AS"],
+  KY: [null, "Cayman Islands", -81.24, 19.32, "CA"],
+  KZ: ["398", "Kazakhstan", 68.69, 49.05, "AS"],
+  LA: ["418", "Laos", 102.53, 19.43, "AS"],
+  LB: ["422", "Lebanon", 35.99, 34.13, "AS"],
+  LC: [null, "Saint Lucia", -60.98, 13.89, "CA"],
+  LI: [null, "Liechtenstein", 9.56, 47.11, "EU"],
+  LK: ["144", "Sri Lanka", 80.7, 7.58, "AS"],
+  LR: ["430", "Liberia", -9.46, 6.45, "AF"],
+  LS: ["426", "Lesotho", 28.25, -29.48, "AF"],
+  LT: ["440", "Lithuania", 24.09, 55.1, "EU"],
+  LU: ["442", "Luxembourg", 6.08, 49.73, "EU"],
+  LV: ["428", "Latvia", 25.46, 57.07, "EU"],
+  LY: ["434", "Libya", 18.01, 26.64, "AF"],
+  MA: ["504", "Morocco", -7.19, 31.65, "AF"],
+  MC: [null, "Monaco", 7.4, 43.74, "EU"],
+  MD: ["498", "Moldova", 28.49, 47.43, "EU"],
+  ME: ["499", "Montenegro", 19.14, 42.8, "EU"],
+  MF: [null, "Saint Martin", -63.05, 18.08, "CA"],
+  MG: ["450", "Madagascar", 46.7, -18.63, "AF"],
+  MH: [null, "Marshall Islands", 171.19, 7.08, "OC"],
+  MK: ["807", "North Macedonia", 21.56, 41.56, "EU"],
+  ML: ["466", "Mali", -2.04, 18.69, "AF"],
+  MM: ["104", "Myanmar", 95.8, 21.57, "AS"],
+  MN: ["496", "Mongolia", 104.15, 46, "AS"],
+  MO: [null, "Macau", 113.56, 22.13, "AS"],
+  MP: [null, "Northern Mariana Islands", 145.73, 15.19, "OC"],
+  MQ: [null, "Martinique", -61.06, 14.71, "CA"],
+  MR: ["478", "Mauritania", -9.74, 19.59, "AF"],
+  MS: [null, "Montserrat", -62.19, 16.74, "CA"],
+  MT: [null, "Malta", 14.43, 35.89, "EU"],
+  MU: [null, "Mauritius", 57.57, -20.3, "AF"],
+  MV: [null, "Maldives", 73.51, 4.17, "AS"],
+  MW: ["454", "Malawi", 33.61, -13.39, "AF"],
+  MX: ["484", "Mexico", -102.29, 23.92, "NA"],
+  MY: ["458", "Malaysia", 113.84, 2.53, "AS"],
+  MZ: ["508", "Mozambique", 37.84, -13.94, "AF"],
+  NA: ["516", "Namibia", 17.11, -20.58, "AF"],
+  NC: ["540", "New Caledonia", 165.08, -21.06, "OC"],
+  NE: ["562", "Niger", 9.5, 17.45, "AF"],
+  NF: [null, "Norfolk Island", 167.95, -29.03, "OC"],
+  NG: ["566", "Nigeria", 7.5, 9.44, "AF"],
+  NI: ["558", "Nicaragua", -85.07, 12.67, "CA"],
+  NL: ["528", "Netherlands", 5.61, 52.42, "EU"],
+  NO: ["578", "Norway", 9.68, 61.36, "EU"],
+  NP: ["524", "Nepal", 83.64, 28.3, "AS"],
+  NR: [null, "Nauru", 166.93, -0.52, "OC"],
+  NU: [null, "Niue", -169.86, -19.05, "OC"],
+  NZ: ["554", "New Zealand", 175.9, -39, "OC"],
+  OM: ["512", "Oman", 57.34, 22.12, "AS"],
+  PA: ["591", "Panama", -80.35, 8.72, "CA"],
+  PE: ["604", "Peru", -72.9, -12.98, "SA"],
+  PF: [null, "French Polynesia", -149.46, -17.63, "OC"],
+  PG: ["598", "Papua New Guinea", 143.91, -5.7, "OC"],
+  PH: ["608", "Philippines", 122.47, 11.2, "AS"],
+  PK: ["586", "Pakistan", 68.55, 29.33, "AS"],
+  PL: ["616", "Poland", 19.49, 51.99, "EU"],
+  PM: [null, "Saint Pierre and Miquelon", -56.33, 47.04, "NA"],
+  PN: [null, "Pitcairn Islands", -128.32, -24.36, "OC"],
+  PR: ["630", "Puerto Rico", -66.48, 18.23, "CA"],
+  PS: ["275", "Palestine", 35.29, 32.05, "AS"],
+  PT: ["620", "Portugal", -8.27, 39.61, "EU"],
+  PW: [null, "Palau", 134.58, 7.52, "OC"],
+  PY: ["600", "Paraguay", -60.15, -21.67, "SA"],
+  QA: ["634", "Qatar", 51.14, 25.24, "AS"],
+  RE: [null, "Réunion", 55.54, -21.11, "AF"],
+  RO: ["642", "Romania", 24.97, 45.73, "EU"],
+  RS: ["688", "Serbia", 20.79, 44.19, "EU"],
+  RU: ["643", "Russia", 44.69, 58.25, "EU"],
+  RW: ["646", "Rwanda", 30.1, -1.9, "AF"],
+  SA: ["682", "Saudi Arabia", 44.7, 23.81, "AS"],
+  SB: ["090", "Solomon Islands", 159.17, -8.03, "OC"],
+  SC: [null, "Seychelles", 55.48, -4.68, "AF"],
+  SD: ["729", "Sudan", 29.26, 16.33, "AF"],
+  SE: ["752", "Sweden", 19.02, 65.86, "EU"],
+  SG: [null, "Singapore", 103.82, 1.37, "AS"],
+  SH: [null, "Saint Helena", -5.71, -15.95, "AF"],
+  SI: ["705", "Slovenia", 14.92, 46.06, "EU"],
+  SJ: [null, "Svalbard", 18.08, 78.78, "EU"],
+  SK: ["703", "Slovakia", 19.05, 48.73, "EU"],
+  SL: ["694", "Sierra Leone", -11.76, 8.62, "AF"],
+  SM: [null, "San Marino", 12.44, 43.93, "EU"],
+  SN: ["686", "Senegal", -14.78, 15.14, "AF"],
+  SO: ["706", "Somalia", 45.19, 3.57, "AF"],
+  SR: ["740", "Suriname", -55.91, 4.14, "SA"],
+  SS: ["728", "South Sudan", 30.39, 7.23, "AF"],
+  ST: [null, "São Tomé and Príncipe", 7.02, 0.97, "AF"],
+  SV: ["222", "El Salvador", -88.89, 13.69, "CA"],
+  SX: [null, "Sint Maarten", -63.07, 18.04, "CA"],
+  SY: ["760", "Syria", 38.28, 35.01, "AS"],
+  SZ: ["748", "Eswatini", 31.47, -26.53, "AF"],
+  TC: [null, "Turks and Caicos Islands", -71.75, 21.82, "CA"],
+  TD: ["148", "Chad", 18.65, 15.14, "AF"],
+  TF: ["260", "French Southern and Antarctic Lands", 69.12, -49.3, "AN"],
+  TG: ["768", "Togo", 1.06, 8.81, "AF"],
+  TH: ["764", "Thailand", 101.07, 15.46, "AS"],
+  TJ: ["762", "Tajikistan", 72.59, 38.2, "AS"],
+  TK: [null, "Tokelau", -172.49, -8.56, "OC"],
+  TL: ["626", "Timor-Leste", 125.85, -8.8, "AS"],
+  TM: ["795", "Turkmenistan", 58.68, 39.86, "AS"],
+  TN: ["788", "Tunisia", 9.01, 33.69, "AF"],
+  TO: [null, "Tonga", -175.16, -21.21, "OC"],
+  TR: ["792", "Türkiye", 34.51, 39.35, "AS"],
+  TT: ["780", "Trinidad and Tobago", -61.25, 10.45, "CA"],
+  TV: [null, "Tuvalu", 179.21, -8.51, "OC"],
+  TW: ["158", "Taiwan", 120.87, 23.65, "AS"],
+  TZ: ["834", "Tanzania", 34.96, -6.05, "AF"],
+  UA: ["804", "Ukraine", 32.14, 49.72, "EU"],
+  UG: ["800", "Uganda", 32.95, 1.97, "AF"],
+  US: ["840", "United States", -97.48, 39.54, "NA"],
+  UY: ["858", "Uruguay", -55.97, -32.96, "SA"],
+  UZ: ["860", "Uzbekistan", 64.01, 41.69, "AS"],
+  VA: [null, "Vatican City", 12.45, 41.9, "EU"],
+  VC: [null, "Saint Vincent and the Grenadines", -61.34, 13.09, "CA"],
+  VE: ["862", "Venezuela", -64.6, 7.18, "SA"],
+  VG: [null, "British Virgin Islands", -64.64, 18.43, "CA"],
+  VI: [null, "United States Virgin Islands", -64.78, 17.75, "CA"],
+  VN: ["704", "Vietnam", 105.39, 21.72, "AS"],
+  VU: ["548", "Vanuatu", 166.91, -15.37, "OC"],
+  WF: [null, "Wallis and Futuna", -178.14, -14.29, "OC"],
+  WS: [null, "Samoa", -172.44, -13.64, "OC"],
+  XK: [null, "Kosovo", 20.86, 42.59, "EU"],
+  YE: ["887", "Yemen", 45.87, 15.33, "AS"],
+  YT: [null, "Mayotte", 45.15, -12.77, "AF"],
+  ZA: ["710", "South Africa", 23.67, -29.71, "AF"],
+  ZM: ["894", "Zambia", 26.4, -14.66, "AF"],
+  ZW: ["716", "Zimbabwe", 29.93, -18.91, "AF"],
 } as const satisfies Record<
   string,
-  readonly [id: string | null, name: string, lng: number, lat: number]
+  readonly [
+    id: string | null,
+    name: string,
+    lng: number,
+    lat: number,
+    continent: ContinentCode,
+  ]
 >
 
 /**
@@ -326,8 +337,8 @@ export type VisitedMapProps = {
   countryPins?: boolean
   /**
    * Hide how much of the world you've seen (see `getVisitedStats`), shown by
-   * default in the bottom-left corner: a card on wide maps, a pill that
-   * expands on tap on narrow ones.
+   * default in the top-left corner: a chip that expands into the list of
+   * places by continent.
    */
   hideStats?: boolean
   /** Hide the legend under the map, which lists the statuses in use. */
@@ -622,90 +633,220 @@ export function getVisitedStats({
   }
 }
 
-function StatsBar({ stats }: { stats: VisitedMapStats }) {
+// Continents in display order.
+const continents: [code: ContinentCode, name: string][] = [
+  ["AF", "Africa"],
+  ["AS", "Asia"],
+  ["EU", "Europe"],
+  ["NA", "North America"],
+  ["CA", "Central America & Caribbean"],
+  ["SA", "South America"],
+  ["OC", "Oceania"],
+  ["AN", "Antarctica"],
+]
+
+// Countries that count in the stats, per continent.
+const continentTotals = Object.entries(countryData).reduce(
+  (totals, [code, data]) => {
+    if (!uncounted.has(code)) totals[data[4]] = (totals[data[4]] ?? 0) + 1
+    return totals
+  },
+  {} as Partial<Record<ContinentCode, number>>,
+)
+
+type StatsItem = {
+  key: string
+  name: string
+  variant: VisitedMapVariant
+  /** Places inside this country. */
+  places?: string[]
+}
+
+type StatsGroup = {
+  name: string
+  /** "5 of 45": counted countries visited in this continent. */
+  count?: string
+  items: StatsItem[]
+}
+
+// The highlighted countries by continent, each with its places, and the places
+// without a country at the end.
+function groupByContinent(
+  highlighted: CountryVariants,
+  places: VisitedMapPlace[],
+): StatsGroup[] {
+  const groups: StatsGroup[] = continents.flatMap(([continent, name]) => {
+    const items = Array.from(highlighted)
+      .flatMap(([code, variant]) => {
+        const data = countryData[code as VisitedMapCountryCode]
+        if (!data || data[4] !== continent) return []
+        return [
+          {
+            key: code,
+            name: data[1] as string,
+            variant,
+            places: places
+              .filter((place) => place.country?.toUpperCase() === code)
+              .map((place) => place.name),
+          },
+        ]
+      })
+      .sort((a, b) => a.name.localeCompare(b.name))
+    if (items.length === 0) return []
+    const visited = items.filter(
+      (item) => item.variant !== "wishlist" && !uncounted.has(item.key),
+    ).length
+    return [
+      {
+        name,
+        count: `${visited} of ${continentTotals[continent] ?? 0}`,
+        items,
+      },
+    ]
+  })
+
+  const others = places.flatMap((place, index) =>
+    place.country
+      ? []
+      : [
+          {
+            key: `place-${index}`,
+            name: place.name,
+            variant: place.variant ?? "visited",
+          },
+        ],
+  )
+  if (others.length > 0) groups.push({ name: "Other places", items: others })
+  return groups
+}
+
+// A ring that fills with the share of the world visited.
+function StatsRing({ stats }: { stats: VisitedMapStats }) {
+  // Whole numbers fit inside the ring; getVisitedStats keeps the decimal.
+  const label =
+    stats.visited > 0 && stats.percent < 1 ? "<1" : Math.round(stats.percent)
+
   return (
-    <div
-      role="progressbar"
-      aria-label="Countries visited"
-      aria-valuemin={0}
-      aria-valuemax={stats.total}
-      aria-valuenow={stats.visited}
-      className="h-1.5 overflow-hidden rounded-full bg-muted"
-    >
-      <div
-        className={cn(
-          "h-full rounded-full bg-sky-500 dark:bg-sky-400",
+    <span className="relative flex size-9 shrink-0 items-center justify-center">
+      <svg
+        viewBox="0 0 36 36"
+        aria-hidden
+        className="absolute inset-0 size-full -rotate-90"
+      >
+        <circle
+          cx={18}
+          cy={18}
+          r={16}
+          fill="none"
+          strokeWidth={3}
+          className="stroke-muted"
+        />
+        <circle
+          cx={18}
+          cy={18}
+          r={16}
+          fill="none"
+          strokeWidth={3}
+          strokeLinecap="round"
+          pathLength={100}
           // Keep a sliver visible for tiny percentages.
-          stats.visited > 0 && "min-w-1.5",
+          strokeDasharray={`${stats.visited > 0 ? Math.max(stats.percent, 2) : 0} 100`}
+          className="stroke-sky-500 dark:stroke-sky-400"
+        />
+      </svg>
+      <span
+        className={cn(
+          "font-semibold tabular-nums",
+          // "100%" needs a smaller size to clear the ring.
+          label === 100 ? "text-[0.5rem]" : "text-[0.625rem]",
         )}
-        style={{ width: `${stats.percent}%` }}
-      />
-    </div>
+      >
+        {label}%
+      </span>
+    </span>
   )
 }
 
-function StatsCounts({ stats }: { stats: VisitedMapStats }) {
+// A chip in the top-left corner (open sea above Alaska on a world map) that
+// expands into the list of places. A native <details>, so it works without
+// JavaScript. Open, it fills the card on narrow maps (the padding keeps the
+// ring in place) and is a strip across the top on wide ones. On narrow maps the closed chip is just the ring (container queries,
+// so it depends on the map's width, not the window's).
+function StatsOverlay({
+  stats,
+  groups,
+}: {
+  stats: VisitedMapStats
+  groups: StatsGroup[]
+}) {
   return (
-    <div className="flex items-center justify-between gap-3 text-xs">
-      <span className="flex items-center gap-2">
-        <span className="size-1.5 rounded-full bg-sky-500 dark:bg-sky-400" />
-        {stats.visited} of {stats.total} countries
-      </span>
-      <span className="text-muted-foreground">
-        {stats.total - stats.visited} left
-      </span>
-    </div>
-  )
-}
-
-// Which one shows depends on the map's own width (container queries), not the
-// window's, so it also fits a map in a narrow column.
-function StatsOverlay({ stats }: { stats: VisitedMapStats }) {
-  return (
-    <>
-      {/* Narrow maps: a pill that expands into the card. A native <details>,
-          so it works without JavaScript. */}
-      <details className="group/stats absolute bottom-2 left-2 z-20 rounded-full border bg-card/80 shadow-sm backdrop-blur-sm open:w-56 open:rounded-xl @3xl:hidden">
-        <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-full px-2.5 py-1 outline-none select-none group-open/stats:items-baseline group-open/stats:px-3 group-open/stats:pt-2.5 group-open/stats:pb-2 focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-          <span className="text-sm font-semibold tabular-nums group-open/stats:text-2xl group-open/stats:tracking-tight">
-            {stats.percent}%
+    <details className="group/stats absolute top-2 left-2 z-20 max-h-[calc(100%-1rem)] max-w-[calc(100%-1rem)] overflow-y-auto rounded-3xl border bg-card/80 shadow-sm backdrop-blur-sm open:top-0 open:left-0 open:size-full open:max-h-full open:max-w-full open:rounded-lg open:border-transparent open:bg-card open:shadow-none @xl:open:top-2 @xl:open:left-2 @xl:open:h-auto @xl:open:max-h-[calc(100%-1rem)] @xl:open:w-[calc(100%-1rem)] @xl:open:max-w-[calc(100%-1rem)] @xl:open:rounded-2xl @xl:open:border-border @xl:open:shadow-sm">
+      <summary className="sticky top-0 z-20 flex cursor-pointer list-none items-center gap-2 rounded-3xl border-b border-transparent p-1 outline-none select-none group-open/stats:rounded-none group-open/stats:border-border group-open/stats:bg-card group-open/stats:p-3 @xl:group-open/stats:rounded-t-2xl @xl:group-open/stats:p-1 @xl:group-open/stats:pr-3 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset @xl:pr-3 [&::-webkit-details-marker]:hidden">
+        <StatsRing stats={stats} />
+        <span className="hidden flex-col leading-tight group-open/stats:flex @xl:flex">
+          <span className="text-sm font-semibold tabular-nums">
+            {stats.visited} of {stats.total}
           </span>
-          <span className="hidden text-sm text-muted-foreground group-open/stats:inline">
-            of the world
+          <span className="text-xs text-muted-foreground">
+            countries visited
           </span>
-          <span className="sr-only group-open/stats:hidden">
-            of the world, show details
-          </span>
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-            className="ml-auto size-3.5 self-center text-muted-foreground transition-transform group-open/stats:rotate-180"
+        </span>
+        <span className="sr-only">Show places by continent</span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+          className="ml-auto hidden size-3.5 text-muted-foreground transition-transform group-open/stats:block group-open/stats:rotate-180 @xl:block"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </summary>
+      {/* Narrow maps: a list that scrolls, with each continent's header pinned
+          under the chip until the next one arrives. Wide maps: as many
+          columns as fit, so the panel stays short. */}
+      <div className="text-sm @xl:columns-[10rem] @xl:gap-x-6 @xl:p-3">
+        {groups.length === 0 && (
+          <p className="p-3 text-muted-foreground @xl:p-0">No places yet.</p>
+        )}
+        {groups.map((group) => (
+          <section
+            key={group.name}
+            className="@xl:mb-3 @xl:break-inside-avoid @xl:last:mb-0"
           >
-            <path d="m18 15-6-6-6 6" />
-          </svg>
-        </summary>
-        <div className="flex flex-col gap-2.5 px-3 pb-3">
-          <StatsBar stats={stats} />
-          <StatsCounts stats={stats} />
-        </div>
-      </details>
-      {/* Wide maps: the full card. */}
-      <div className="absolute bottom-2 left-2 z-20 hidden w-52 flex-col gap-2.5 rounded-xl border bg-card/80 p-3.5 shadow-sm backdrop-blur-sm @3xl:flex">
-        <p className="flex items-baseline gap-2">
-          <span className="text-3xl font-semibold tracking-tight tabular-nums">
-            {stats.percent}%
-          </span>
-          <span className="text-sm text-muted-foreground">of the world</span>
-        </p>
-        <StatsBar stats={stats} />
-        <StatsCounts stats={stats} />
+            <h3 className="sticky top-[61px] z-10 flex items-baseline justify-between gap-3 border-b bg-card px-3 py-2 font-medium @xl:static @xl:border-b-0 @xl:bg-transparent @xl:px-0 @xl:pt-0 @xl:pb-1.5 @xl:text-xs @xl:text-muted-foreground">
+              {group.name}
+              {group.count && (
+                <span className="text-xs font-normal text-muted-foreground tabular-nums">
+                  {group.count}
+                </span>
+              )}
+            </h3>
+            <ul className="flex flex-col divide-y px-3 @xl:gap-1 @xl:divide-y-0 @xl:px-0">
+              {group.items.map((item) => (
+                <li key={item.key} className="flex gap-2 py-2 @xl:py-0">
+                  <VisitedMapSwatch
+                    variant={item.variant}
+                    className="mt-1 shrink-0"
+                  />
+                  <span>
+                    {item.name}
+                    {item.places && item.places.length > 0 && (
+                      <span className="block text-xs text-muted-foreground">
+                        {item.places.join(", ")}
+                      </span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
       </div>
-    </>
+    </details>
   )
 }
 
@@ -830,7 +971,14 @@ export function VisitedMap({
         data-slot="visited-map-card"
         className="@container rounded-xl border bg-card p-2"
       >
-        <div className="relative">
+        {/* On narrow maps the card is taller than the map, which is centered
+            in it: room for the list of places when the stats chip opens. */}
+        <div
+          className={cn(
+            "relative flex flex-col justify-center",
+            !hideStats && "min-h-80 @xl:min-h-0",
+          )}
+        >
           {zoomable ? (
             <VisitedMapZoom initialView={initialView}>{layer}</VisitedMapZoom>
           ) : initialView ? (
@@ -850,10 +998,13 @@ export function VisitedMap({
               </div>
             </div>
           ) : (
-            layer
+            <div className="relative">{layer}</div>
           )}
           {!hideStats && (
-            <StatsOverlay stats={getVisitedStats({ countries, places })} />
+            <StatsOverlay
+              stats={getVisitedStats({ countries, places })}
+              groups={groupByContinent(highlighted, places)}
+            />
           )}
         </div>
       </div>

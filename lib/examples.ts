@@ -151,7 +151,7 @@ export function WithoutPinsMap() {
     slug: "stats",
     title: "Stats",
     description:
-      "The map shows how much of the world you've seen: a card on wide maps, a pill that expands on tap on narrow ones. Hide it with hideStats, or build your own UI with getVisitedStats.",
+      "The map shows how much of the world you've seen in a chip in the top-left corner. Click it to list your places by continent. Hide it with hideStats, or build your own UI with getVisitedStats.",
     props: {
       countries: {
         current: "AR",

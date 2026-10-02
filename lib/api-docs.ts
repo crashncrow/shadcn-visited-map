@@ -45,7 +45,7 @@ export const visitedMapProps: PropRow[] = [
     type: "boolean",
     default: "false",
     description:
-      "Hide how much of the world you've seen, shown by default in the bottom-left corner: a card on wide maps, a pill that expands on tap on narrow ones.",
+      "Hide how much of the world you've seen, shown by default in the top-left corner: a chip that expands into the list of places by continent.",
   },
   {
     name: "hideLegend",
