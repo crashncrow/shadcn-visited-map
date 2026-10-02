@@ -14,5 +14,6 @@ export const demoCountries: VisitedMapCountries = {
 export const demoPlaces: VisitedMapPlace[] = [
   { name: "Barcelona", coords: [2.17, 41.39], country: "ES", variant: "lived" },
   { name: "New York", coords: [-74.01, 40.71], country: "US" },
+  { name: "San Francisco", coords: [-122.42, 37.77], country: "US" },
   { name: "Kyoto", coords: [135.77, 35.01], country: "JP" },
 ]
