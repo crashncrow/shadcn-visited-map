@@ -1,4 +1,5 @@
 import { geoArea, geoMercator, geoPath } from "d3-geo"
+import { useId } from "react"
 import { feature } from "topojson-client"
 import worldAtlas from "world-atlas/countries-110m.json"
 
@@ -6,8 +7,9 @@ import { cn } from "@/lib/utils"
 
 import { VisitedMapZoom, type VisitedMapView } from "./visited-map-zoom"
 
-// This component is intentionally isomorphic: no "use client", no hooks and
-// no server-only APIs. Rendered from a Server Component, the map is plain SVG
+// This component is intentionally isomorphic: no "use client", no state or
+// effects (only useId, which also works on the server) and no server-only
+// APIs. Rendered from a Server Component, the map is plain SVG
 // markup and the TopoJSON never reaches the client bundle. Only `zoomable`
 // adds a client component (visited-map-zoom.tsx), which moves the
 // server-rendered map without ever seeing the geometry.
@@ -664,9 +666,45 @@ type StatsItem = {
 
 type StatsGroup = {
   name: string
+  /** Strongest status in the group, for its dot. */
+  variant: VisitedMapVariant
   /** "5 of 45": counted countries visited in this continent. */
   count?: string
+  /** Counted countries visited in this continent, and their share of it. */
+  visited?: number
+  percent?: number
+  /** One line with everything in the group, shown while it's collapsed. */
+  summary: string
   items: StatsItem[]
+}
+
+const statusLabels: Partial<Record<VisitedMapVariant, string>> = {
+  current: "Now",
+  lived: "Lived",
+  wishlist: "Wishlist",
+}
+
+function strongest(items: StatsItem[]) {
+  return items.reduce<VisitedMapVariant>(
+    (best, item) => (rank[item.variant] > rank[best] ? item.variant : best),
+    "wishlist",
+  )
+}
+
+// "Spain (Barcelona), Italy · Wishlist: Iceland"
+function summarize(items: StatsItem[]) {
+  const label = (item: StatsItem) =>
+    item.places?.length ? `${item.name} (${item.places.join(", ")})` : item.name
+  const seen = items.filter((item) => item.variant !== "wishlist").map(label)
+  const wishlist = items
+    .filter((item) => item.variant === "wishlist")
+    .map(label)
+  return [
+    seen.join(", "),
+    wishlist.length > 0 && `Wishlist: ${wishlist.join(", ")}`,
+  ]
+    .filter(Boolean)
+    .join(" · ")
 }
 
 // The highlighted countries by continent, each with its places, and the places
@@ -696,10 +734,15 @@ function groupByContinent(
     const visited = items.filter(
       (item) => item.variant !== "wishlist" && !uncounted.has(item.key),
     ).length
+    const total = continentTotals[continent] ?? 0
     return [
       {
         name,
-        count: `${visited} of ${continentTotals[continent] ?? 0}`,
+        variant: strongest(items),
+        count: `${visited} of ${total}`,
+        visited,
+        percent: total > 0 ? (visited / total) * 100 : 0,
+        summary: summarize(items),
         items,
       },
     ]
@@ -712,19 +755,25 @@ function groupByContinent(
           {
             key: `place-${index}`,
             name: place.name,
-            variant: place.variant ?? "visited",
+            variant: place.variant ?? ("visited" as const),
           },
         ],
   )
-  if (others.length > 0) groups.push({ name: "Other places", items: others })
+  if (others.length > 0)
+    groups.push({
+      name: "Other places",
+      variant: strongest(others),
+      summary: summarize(others),
+      items: others,
+    })
   return groups
 }
 
-// A ring that fills with the share of the world visited.
-function StatsRing({ stats }: { stats: VisitedMapStats }) {
+// A ring that fills with the share visited: of the world in the chip, of a
+// continent in its card.
+function StatsRing({ visited, percent }: { visited: number; percent: number }) {
   // Whole numbers fit inside the ring; getVisitedStats keeps the decimal.
-  const label =
-    stats.visited > 0 && stats.percent < 1 ? "<1" : Math.round(stats.percent)
+  const label = visited > 0 && percent < 1 ? "<1" : Math.round(percent)
 
   return (
     <span className="relative flex size-9 shrink-0 items-center justify-center">
@@ -750,7 +799,7 @@ function StatsRing({ stats }: { stats: VisitedMapStats }) {
           strokeLinecap="round"
           pathLength={100}
           // Keep a sliver visible for tiny percentages.
-          strokeDasharray={`${stats.visited > 0 ? Math.max(stats.percent, 2) : 0} 100`}
+          strokeDasharray={`${visited > 0 ? Math.max(percent, 2) : 0} 100`}
           className="stroke-sky-500 dark:stroke-sky-400"
         />
       </svg>
@@ -767,11 +816,75 @@ function StatsRing({ stats }: { stats: VisitedMapStats }) {
   )
 }
 
+const chipStyles: Record<VisitedMapVariant, string> = {
+  visited: "",
+  lived: "border-emerald-500/40 bg-emerald-500/10",
+  wishlist: "border-amber-400/40 bg-amber-400/10",
+  current: "border-rose-500/40 bg-rose-500/10",
+}
+
+// One continent: collapsed, a line with everything in it; open, a chip per
+// country with its status and places.
+function StatsCard({ group, name }: { group: StatsGroup; name: string }) {
+  return (
+    <details
+      // Cards of the same map share a name, so opening one closes the others.
+      name={name}
+      className="group/continent rounded-xl border bg-muted/30"
+    >
+      <summary className="flex cursor-pointer list-none items-center gap-2.5 rounded-xl px-3 py-2 outline-none select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset [&::-webkit-details-marker]:hidden">
+        <VisitedMapSwatch variant={group.variant} className="shrink-0" />
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="flex items-center gap-2">
+            <span className="truncate font-medium">{group.name}</span>
+            {group.count && (
+              <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground tabular-nums">
+                {group.count}
+              </span>
+            )}
+          </span>
+          <span className="truncate text-xs text-muted-foreground group-open/continent:hidden">
+            {group.summary}
+          </span>
+        </span>
+        {group.percent !== undefined && (
+          <StatsRing visited={group.visited ?? 0} percent={group.percent} />
+        )}
+      </summary>
+      <ul className="flex flex-wrap gap-1.5 px-3 pb-3">
+        {group.items.map((item) => (
+          <li
+            key={item.key}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md border px-2 py-1",
+              chipStyles[item.variant],
+            )}
+          >
+            <VisitedMapSwatch variant={item.variant} className="shrink-0" />
+            {item.name}
+            {statusLabels[item.variant] && (
+              <span className="text-xs text-muted-foreground">
+                {statusLabels[item.variant]}
+              </span>
+            )}
+            {item.places && item.places.length > 0 && (
+              <span className="text-xs text-muted-foreground">
+                {item.places.join(", ")}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </details>
+  )
+}
+
 // A chip in the top-left corner (open sea above Alaska on a world map) that
-// expands into the list of places. A native <details>, so it works without
+// expands into a card per continent. Native <details>, so it works without
 // JavaScript. Open, it fills the card on narrow maps (the padding keeps the
-// ring in place) and is a strip across the top on wide ones. On narrow maps the closed chip is just the ring (container queries,
-// so it depends on the map's width, not the window's).
+// ring in place) and is a column on the left on wide ones. On narrow maps the
+// closed chip is just the ring (container queries, so it depends on the map's
+// width, not the window's).
 function StatsOverlay({
   stats,
   groups,
@@ -779,10 +892,12 @@ function StatsOverlay({
   stats: VisitedMapStats
   groups: StatsGroup[]
 }) {
+  const name = useId()
+
   return (
-    <details className="group/stats absolute top-2 left-2 z-20 max-h-[calc(100%-1rem)] max-w-[calc(100%-1rem)] overflow-y-auto rounded-3xl border bg-card/80 shadow-sm backdrop-blur-sm open:top-0 open:left-0 open:size-full open:max-h-full open:max-w-full open:rounded-lg open:border-transparent open:bg-card open:shadow-none @xl:open:top-2 @xl:open:left-2 @xl:open:h-auto @xl:open:max-h-[calc(100%-1rem)] @xl:open:w-[calc(100%-1rem)] @xl:open:max-w-[calc(100%-1rem)] @xl:open:rounded-2xl @xl:open:border-border @xl:open:shadow-sm">
-      <summary className="sticky top-0 z-20 flex cursor-pointer list-none items-center gap-2 rounded-3xl border-b border-transparent p-1 outline-none select-none group-open/stats:rounded-none group-open/stats:border-border group-open/stats:bg-card group-open/stats:p-3 @xl:group-open/stats:rounded-t-2xl @xl:group-open/stats:p-1 @xl:group-open/stats:pr-3 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset @xl:pr-3 [&::-webkit-details-marker]:hidden">
-        <StatsRing stats={stats} />
+    <details className="group/stats absolute top-2 left-2 z-20 max-h-[calc(100%-1rem)] max-w-[calc(100%-1rem)] overflow-y-auto rounded-3xl border bg-card/80 shadow-sm backdrop-blur-sm open:top-0 open:left-0 open:size-full open:max-h-full open:max-w-full open:rounded-lg open:border-transparent open:bg-card open:shadow-none @xl:open:top-2 @xl:open:left-2 @xl:open:h-auto @xl:open:max-h-[calc(100%-1rem)] @xl:open:w-80 @xl:open:max-w-[calc(100%-1rem)] @xl:open:rounded-2xl @xl:open:border-border @xl:open:shadow-sm">
+      <summary className="sticky top-0 z-20 flex cursor-pointer list-none items-center gap-2 rounded-3xl p-1 outline-none select-none group-open/stats:rounded-none group-open/stats:bg-card group-open/stats:p-3 @xl:group-open/stats:rounded-t-2xl @xl:group-open/stats:p-1 @xl:group-open/stats:pr-3 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset @xl:pr-3 [&::-webkit-details-marker]:hidden">
+        <StatsRing visited={stats.visited} percent={stats.percent} />
         <span className="hidden flex-col leading-tight group-open/stats:flex @xl:flex">
           <span className="text-sm font-semibold tabular-nums">
             {stats.visited} of {stats.total}
@@ -805,45 +920,12 @@ function StatsOverlay({
           <path d="m6 9 6 6 6-6" />
         </svg>
       </summary>
-      {/* Narrow maps: a list that scrolls, with each continent's header pinned
-          under the chip until the next one arrives. Wide maps: as many
-          columns as fit, so the panel stays short. */}
-      <div className="text-sm @xl:columns-[10rem] @xl:gap-x-6 @xl:p-3">
+      <div className="flex flex-col gap-1.5 px-2 pb-2 text-sm">
         {groups.length === 0 && (
-          <p className="p-3 text-muted-foreground @xl:p-0">No places yet.</p>
+          <p className="px-1 text-muted-foreground">No places yet.</p>
         )}
         {groups.map((group) => (
-          <section
-            key={group.name}
-            className="@xl:mb-3 @xl:break-inside-avoid @xl:last:mb-0"
-          >
-            <h3 className="sticky top-[61px] z-10 flex items-baseline justify-between gap-3 border-b bg-card px-3 py-2 font-medium @xl:static @xl:border-b-0 @xl:bg-transparent @xl:px-0 @xl:pt-0 @xl:pb-1.5 @xl:text-xs @xl:text-muted-foreground">
-              {group.name}
-              {group.count && (
-                <span className="text-xs font-normal text-muted-foreground tabular-nums">
-                  {group.count}
-                </span>
-              )}
-            </h3>
-            <ul className="flex flex-col divide-y px-3 @xl:gap-1 @xl:divide-y-0 @xl:px-0">
-              {group.items.map((item) => (
-                <li key={item.key} className="flex gap-2 py-2 @xl:py-0">
-                  <VisitedMapSwatch
-                    variant={item.variant}
-                    className="mt-1 shrink-0"
-                  />
-                  <span>
-                    {item.name}
-                    {item.places && item.places.length > 0 && (
-                      <span className="block text-xs text-muted-foreground">
-                        {item.places.join(", ")}
-                      </span>
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <StatsCard key={group.name} group={group} name={name} />
         ))}
       </div>
     </details>
