@@ -30,25 +30,40 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
-// Keeps the map covering the viewport: no empty space at the edges.
-function constrain({ k, x, y }: View): View {
+// Keeps the map covering the viewport: no empty space at the edges. `margin`
+// is the empty band above and below the map at 1×, as a fraction of the map's
+// height, when the viewport is taller than the map (narrow maps): zooming in
+// fills those bands first, growing from the center.
+function constrain({ k, x, y }: View, margin: number): View {
   const zoom = clamp(k, MIN_ZOOM, MAX_ZOOM)
   return {
     k: zoom,
     x: clamp(x, 1 - zoom, 0),
-    y: clamp(y, 1 - zoom, 0),
+    y:
+      zoom < 1 + 2 * margin
+        ? (1 - zoom) / 2
+        : clamp(y, 1 + margin - zoom, -margin),
   }
 }
 
-// Zooms to `k` keeping the point (u, v) of the viewport, as fractions of its
-// size, under the cursor or fingers.
-function zoomAt(view: View, k: number, u: number, v: number): View {
+// Zooms to `k` keeping the point (u, v), as fractions of the map's size at 1×,
+// under the cursor or fingers.
+function zoomAt(
+  view: View,
+  k: number,
+  u: number,
+  v: number,
+  margin: number,
+): View {
   const zoom = clamp(k, MIN_ZOOM, MAX_ZOOM)
-  return constrain({
-    k: zoom,
-    x: u - ((u - view.x) / view.k) * zoom,
-    y: v - ((v - view.y) / view.k) * zoom,
-  })
+  return constrain(
+    {
+      k: zoom,
+      x: u - ((u - view.x) / view.k) * zoom,
+      y: v - ((v - view.y) / view.k) * zoom,
+    },
+    margin,
+  )
 }
 
 type Pointer = { x: number; y: number }
@@ -112,6 +127,7 @@ export function VisitedMapZoom({
   children: React.ReactNode
 }) {
   const viewportRef = React.useRef<HTMLDivElement>(null)
+  const layerRef = React.useRef<HTMLDivElement>(null)
   const [view, setView] = React.useState<View>(initialView)
   // Buttons and double-click animate; wheel, drag and pinch follow the input.
   const [animate, setAnimate] = React.useState(false)
@@ -133,15 +149,31 @@ export function VisitedMapZoom({
     setView(next)
   }, [])
 
-  // Viewport-relative position of a client point, as fractions of its size.
-  const toFraction = React.useCallback((point: Pointer) => {
-    const rect = viewportRef.current!.getBoundingClientRect()
+  // The map's size at 1× (its layout box, which transforms don't change) and
+  // the band above it when the viewport is taller than the map.
+  const measure = React.useCallback(() => {
+    const layer = layerRef.current!
     return {
-      u: (point.x - rect.left) / rect.width,
-      v: (point.y - rect.top) / rect.height,
-      rect,
+      width: layer.offsetWidth,
+      height: layer.offsetHeight,
+      top: layer.offsetTop,
+      margin: layer.offsetTop / layer.offsetHeight,
     }
   }, [])
+
+  // Position of a client point as fractions of the map's size at 1×.
+  const toFraction = React.useCallback(
+    (point: Pointer) => {
+      const rect = viewportRef.current!.getBoundingClientRect()
+      const map = measure()
+      return {
+        u: (point.x - rect.left) / map.width,
+        v: (point.y - rect.top - map.top) / map.height,
+        map,
+      }
+    },
+    [measure],
+  )
 
   // A native listener: React's onWheel is passive and can't stop the page from
   // scrolling. The wheel only zooms with ⌘/Ctrl (trackpad pinch sends Ctrl),
@@ -161,10 +193,13 @@ export function VisitedMapZoom({
       }
       event.preventDefault()
       setHint(null)
-      const { u, v } = toFraction({ x: event.clientX, y: event.clientY })
+      const { u, v, map } = toFraction({ x: event.clientX, y: event.clientY })
       const delta = clamp(event.deltaY, -50, 50)
       const current = viewRef.current
-      update(zoomAt(current, current.k * Math.exp(-delta * 0.01), u, v), false)
+      update(
+        zoomAt(current, current.k * Math.exp(-delta * 0.01), u, v, map.margin),
+        false,
+      )
     }
 
     viewport.addEventListener("wheel", onWheel, { passive: false })
@@ -206,19 +241,23 @@ export function VisitedMapZoom({
       // and pan by how far the midpoint moved.
       const center = midpoint(points[0], points[1])
       const spread = distance(points[0], points[1])
-      const { u, v, rect } = toFraction(center)
+      const { u, v, map } = toFraction(center)
       const scaled = zoomAt(
         current,
         current.k * (state.distance ? spread / state.distance : 1),
         u,
         v,
+        map.margin,
       )
       update(
-        constrain({
-          ...scaled,
-          x: scaled.x + (center.x - state.last.x) / rect.width,
-          y: scaled.y + (center.y - state.last.y) / rect.height,
-        }),
+        constrain(
+          {
+            ...scaled,
+            x: scaled.x + (center.x - state.last.x) / map.width,
+            y: scaled.y + (center.y - state.last.y) / map.height,
+          },
+          map.margin,
+        ),
         false,
       )
       state.last = center
@@ -235,13 +274,16 @@ export function VisitedMapZoom({
       event.currentTarget.setPointerCapture(event.pointerId)
       setDragging(true)
     }
-    const { rect } = toFraction(point)
+    const map = measure()
     update(
-      constrain({
-        ...current,
-        x: current.x + (point.x - state.last.x) / rect.width,
-        y: current.y + (point.y - state.last.y) / rect.height,
-      }),
+      constrain(
+        {
+          ...current,
+          x: current.x + (point.x - state.last.x) / map.width,
+          y: current.y + (point.y - state.last.y) / map.height,
+        },
+        map.margin,
+      ),
       false,
     )
     state.last = point
@@ -258,13 +300,25 @@ export function VisitedMapZoom({
   }
 
   function onDoubleClick(event: React.MouseEvent<HTMLDivElement>) {
-    const { u, v } = toFraction({ x: event.clientX, y: event.clientY })
-    update(zoomAt(viewRef.current, viewRef.current.k * 2, u, v), true)
+    const { u, v, map } = toFraction({ x: event.clientX, y: event.clientY })
+    update(
+      zoomAt(viewRef.current, viewRef.current.k * 2, u, v, map.margin),
+      true,
+    )
   }
 
   // Buttons zoom around the center of the viewport.
   function zoomBy(factor: number) {
-    update(zoomAt(viewRef.current, viewRef.current.k * factor, 0.5, 0.5), true)
+    update(
+      zoomAt(
+        viewRef.current,
+        viewRef.current.k * factor,
+        0.5,
+        0.5,
+        measure().margin,
+      ),
+      true,
+    )
   }
 
   const zoomed = view.k > 1
@@ -285,13 +339,16 @@ export function VisitedMapZoom({
         onPointerCancel={onPointerUp}
         onDoubleClick={onDoubleClick}
         className={cn(
-          "relative overflow-hidden rounded-lg select-none",
+          // Fills the card, with the map centered: on narrow maps the card is
+          // taller than the map, and the zoomed map uses that room.
+          "relative flex flex-1 flex-col justify-center overflow-hidden rounded-lg select-none",
           // At 1× one finger scrolls the page; zoomed in, it pans the map.
           zoomed ? "touch-none" : "touch-pan-x touch-pan-y",
           zoomed && (dragging ? "cursor-grabbing" : "cursor-grab"),
         )}
       >
         <div
+          ref={layerRef}
           className={cn(
             "relative origin-top-left",
             animate && "transition-transform duration-300 ease-out",
