@@ -1,7 +1,7 @@
 // GitHub address (owner/repo/item): the shadcn CLI reads registry.json from the
 // repo. Switch to "@visited-map/visited-map" once the namespace is listed in the
 // shadcn registry directory.
-export const installTarget = "crashncrow/shadcn-visited-map/visited-map"
+const installTarget = "crashncrow/shadcn-visited-map/visited-map"
 
 export const packageManagers = ["pnpm", "npm", "yarn", "bun"] as const
 

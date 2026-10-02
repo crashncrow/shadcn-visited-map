@@ -52,7 +52,6 @@ const regionCodes = new Set<string>(
 let state: PlacesBuilderState | null = null
 // Set when the last save to localStorage failed (blocked, full, private mode).
 let saveFailed = false
-let fallbackIdCounter = 0
 const listeners = new Set<() => void>()
 
 function isVariant(value: unknown): value is VisitedMapVariant {
@@ -197,12 +196,9 @@ export function toggleRegion(code: string, variant: VisitedMapVariant) {
 export function addCustomPlace(place: Omit<CustomPlace, "id">) {
   const current = read()
   const base = place.variant === "current" ? demoteCurrent(current) : current
-  const id =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : // randomUUID only exists in secure contexts (https, localhost); the
-        // counter keeps ids unique when two places land in the same millisecond.
-        `${Date.now()}-${++fallbackIdCounter}`
+  // randomUUID only exists in secure contexts (https, localhost), not when
+  // testing over plain http on the local network.
+  const id = crypto.randomUUID?.() ?? String(Date.now())
   write({ ...base, custom: [...base.custom, { ...place, id }] })
 }
 

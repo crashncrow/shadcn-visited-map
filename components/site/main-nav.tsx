@@ -8,7 +8,7 @@ import { mainNav } from "@/lib/docs-nav"
 import { cn } from "@/lib/utils"
 
 // "/docs" is active on docs pages except the examples, which have their own link.
-export function isNavItemActive(href: string, pathname: string) {
+function isNavItemActive(href: string, pathname: string) {
   if (href === "/docs")
     return (
       pathname.startsWith("/docs") && !pathname.startsWith("/docs/examples")
