@@ -1,7 +1,7 @@
 import Link from "next/link"
 
 import { GitHubIcon } from "@/components/github-icon"
-import { MapCheckIcon } from "@/components/map-check-icon"
+import { Logo } from "@/components/site/logo"
 import { repoUrl } from "@/lib/docs-nav"
 
 function XIcon(props: React.ComponentProps<"svg">) {
@@ -74,12 +74,8 @@ export function SiteFooter() {
         <div className="mx-auto w-full max-w-5xl border-x">
           <div className="grid gap-10 px-6 py-10 md:grid-cols-[minmax(0,1fr)_auto] md:gap-16">
             <div className="flex flex-col gap-4">
-              <Link
-                href="/"
-                className="flex w-fit items-center gap-2 text-lg font-semibold"
-              >
-                <MapCheckIcon className="size-6" />
-                Visited Map
+              <Link href="/" className="w-fit">
+                <Logo className="text-lg" />
               </Link>
               <p className="max-w-xs text-sm text-muted-foreground">
                 Free &amp; open-source, ready-to-use world map for shadcn/ui

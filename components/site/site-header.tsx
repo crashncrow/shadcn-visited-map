@@ -1,9 +1,9 @@
 import { PlusIcon } from "lucide-react"
 import Link from "next/link"
 
-import { MapCheckIcon } from "@/components/map-check-icon"
 import { CommandMenu } from "@/components/site/command-menu"
 import { GitHubLink } from "@/components/site/github-link"
+import { Logo } from "@/components/site/logo"
 import { MainNav } from "@/components/site/main-nav"
 import { MobileNav } from "@/components/site/mobile-nav"
 import { ModeSwitcher } from "@/components/site/mode-switcher"
@@ -19,10 +19,10 @@ export function SiteHeader() {
         <MobileNav className="-ml-2 md:hidden" />
         <Link
           href="/"
-          className="flex items-center gap-2 rounded-md px-1 py-1 font-semibold"
+          aria-label="Visited Map"
+          className="rounded-md px-1 py-1"
         >
-          <MapCheckIcon className="size-5" />
-          <span className="hidden sm:inline">Visited Map</span>
+          <Logo hideNameOnMobile />
         </Link>
         <MainNav className="ml-3 hidden md:flex" />
         <div className="ml-auto flex items-center gap-2 md:flex-1 md:justify-end">
