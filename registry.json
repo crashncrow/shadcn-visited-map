@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "visited-map",
-  "homepage": "https://shadcn-visited-map.vercel.app",
+  "homepage": "https://visitedmap.vercel.app",
   "items": [
     {
       "name": "visited-map",

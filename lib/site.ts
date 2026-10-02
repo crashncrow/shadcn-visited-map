@@ -15,4 +15,4 @@ export const installCommands: Record<PackageManager, string> = {
 }
 
 /** Production URL: base for canonical links, the share image and sitemap. */
-export const siteUrl = "https://shadcn-visited-map.vercel.app"
+export const siteUrl = "https://visitedmap.vercel.app"
