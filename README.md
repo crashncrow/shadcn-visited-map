@@ -15,7 +15,7 @@
 <br />
 
 <p align="center">
-  <img src=".github/preview.png" alt="Visited Map in dark mode" />
+  <img src="app/opengraph-image.png" alt="Visited Map in dark mode" />
 </p>
 
 ## Installation
