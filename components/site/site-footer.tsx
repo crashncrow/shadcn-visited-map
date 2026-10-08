@@ -4,14 +4,6 @@ import { GitHubIcon } from "@/components/github-icon"
 import { Logo } from "@/components/site/logo"
 import { repoUrl } from "@/lib/docs-nav"
 
-function XIcon(props: React.ComponentProps<"svg">) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-      <path d="M18.9 1.2h3.7l-8 9.2 9.4 12.4h-7.4l-5.8-7.6-6.6 7.6H.5l8.6-9.8L0 1.2h7.6l5.2 6.9 6.1-6.9Zm-1.3 19.4h2L6.5 3.2H4.3l13.3 17.4Z" />
-    </svg>
-  )
-}
-
 const columns: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: "Docs",
@@ -43,7 +35,6 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
 
 const socials = [
   { label: "GitHub", href: repoUrl, Icon: GitHubIcon },
-  { label: "X", href: "https://x.com/_nnaro_", Icon: XIcon },
 ]
 
 function FooterLink({ href, children }: { href: string; children: string }) {
@@ -120,12 +111,12 @@ export function SiteFooter() {
             <p>
               Made with ♥ by{" "}
               <a
-                href="https://x.com/_nnaro_"
+                href="https://nnaro.dev?utm_source=visitedmap"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-foreground"
               >
-                @_nnaro_
+                nnaro.dev
               </a>
             </p>
           </div>
