@@ -21,7 +21,7 @@
 ## Installation
 
 ```bash
-npx shadcn@latest add crashncrow/shadcn-visited-map/visited-map
+npx shadcn@latest add @visited-map/visited-map
 ```
 
 ```tsx
